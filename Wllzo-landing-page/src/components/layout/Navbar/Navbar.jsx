@@ -34,10 +34,11 @@ const Navbar = () => {
   // Close menu when clicking outside
   useEffect(() => {
     const handleClickOutside = (event) => {
-      // Handle mobile menu close if clicking outside the menu components
-      if (isOpen && 
-          !event.target.closest('button[aria-expanded="true"]') && 
-          !event.target.closest('.mobile-menu-container')) {
+      const nav = document.getElementById("navbar-menu");
+      
+      // Handle mobile menu close
+      if (isOpen && nav && !nav.contains(event.target) && 
+          !event.target.closest("button[aria-controls='navbar-menu']")) {
         setIsOpen(false);
       }
     };
@@ -83,15 +84,12 @@ const Navbar = () => {
   ];
 
   return (
-    <nav 
-      className={`fixed w-full z-50 transition-all duration-300 overflow-hidden ${
-        isScrolled 
-          ? "bg-green-100/70 shadow-lg backdrop-blur-md" 
-          : "bg-green-50/50 backdrop-blur-sm"
-      } border-b border-green-200/40`}
-      style={{ "--navbar-height": "64px" }}
-    >
-      <div className="max-w-screen-xl flex items-center justify-between mx-auto px-4 py-3 w-full">
+    <nav className={`fixed w-full z-50 transition-all duration-300 ${
+      isScrolled 
+        ? "bg-green-100/70 shadow-lg backdrop-blur-md" 
+        : "bg-green-50/50 backdrop-blur-sm"
+    } border-b border-green-200/40`}>
+      <div className="max-w-screen-xl flex items-center justify-between mx-auto px-4 py-3">
         {/* Logo */}
         <div className="flex-shrink-0 flex-1 md:flex-none md:mr-4">
           <a href="#" className="flex items-center space-x-2 md:space-x-3 rtl:space-x-reverse" onClick={(e) => {
@@ -140,46 +138,42 @@ const Navbar = () => {
         
         {/* Mobile Menu Toggle Button */}
         <button 
+          data-collapse-toggle="navbar-menu" 
           type="button" 
-          className="inline-flex items-center justify-center p-2 w-10 h-10 text-gray-700 rounded-md md:hidden hover:bg-green-100/80 focus:outline-none focus:ring-2 focus:ring-green-400/70 ml-auto z-50 transition-all duration-200 ease-in-out" 
+          className="inline-flex items-center p-2 w-10 h-10 justify-center text-sm text-gray-800 rounded-lg md:hidden hover:bg-green-200/50 focus:outline-none focus:ring-2 focus:ring-green-300/50 ml-auto z-50" 
+          aria-controls="navbar-menu" 
           aria-expanded={isOpen}
           onClick={() => setIsOpen(!isOpen)}
         >
-          <span className="sr-only">Open main menu</span>
+          <span className="sr-only ">Open main menu</span>
           {isOpen ? (
             <HiX className="w-6 h-6" />
           ) : (
-            <HiMenu className="w-6 h-6" />
+            <HiMenu className="w-6 h-6 " />
           )}
         </button>
         
         {/* Navigation Menu - Mobile */}
         <div 
-          className={`md:hidden fixed inset-0 z-40 transition-opacity duration-300 ease-in-out ${
-            isOpen ? 'opacity-100' : 'opacity-0 pointer-events-none'
-          }`} 
+          className={`${isOpen ? 'block' : 'hidden'} md:hidden`} 
+          id="navbar-menu"
         >
-          {/* Semi-transparent overlay */}
-          <div className="fixed inset-0 bg-black/30 backdrop-blur-sm transition-opacity duration-300" onClick={() => setIsOpen(false)} />
-          
           {/* Mobile Menu Container */}
-          <div className={`mobile-menu-container fixed inset-x-0 top-[calc(var(--navbar-height,64px))] bg-white/95 backdrop-blur-md shadow-lg border-t border-green-200/50 max-h-[calc(100vh-var(--navbar-height,64px))] overflow-y-auto z-50 transition-all duration-300 ease-in-out transform ${
-            isOpen ? 'translate-y-0' : '-translate-y-4 opacity-80'
-          }`}>
+          <div className="fixed inset-x-0 top-[68px] bg-green-50/90 backdrop-blur-md shadow-lg border-t border-green-200/40 max-h-[calc(100vh-68px)] overflow-y-auto">
             {/* Navigation Links */}
-            <ul className="flex flex-col py-3 px-4 font-medium">
+            <ul className="flex flex-col p-4 font-medium items-center text-center">
               {navItems.map(item => (
-                <li key={item.id} className="py-1.5">
+                <li key={item.id} className="mb-2 w-full max-w-[250px]">
                   <a 
                     href={`#${item.id}`}
                     onClick={(e) => {
                       e.preventDefault();
                       scrollToSection(item.id);
                     }}
-                    className={`block py-3 px-4 rounded-lg transition-colors duration-200 text-base ${
+                    className={`block py-2.5 px-3 rounded-md transition-colors text-center ${
                       activeSection === item.id 
-                        ? "text-gray-900 bg-green-100/70 font-medium" 
-                        : "text-gray-700 hover:bg-green-50/80 active:bg-green-100/50"
+                        ? "text-gray-900 bg-green-200/50 font-bold" 
+                        : "text-gray-700 hover:bg-green-100/50"
                     }`}
                     aria-current={activeSection === item.id ? "page" : undefined}
                   >
@@ -187,9 +181,9 @@ const Navbar = () => {
                   </a>
                 </li>
               ))}
-              <li className="mt-3 mb-2 pt-3 border-t border-green-200/40">
+              <li className="mt-4 mb-2 pt-3 border-t border-green-200/40 w-full max-w-[250px]">
                 <button 
-                  className="w-full bg-green-600/90 text-white px-4 py-3.5 rounded-lg hover:bg-green-700/90 active:bg-green-800/90 transition-colors duration-200 font-medium text-base"
+                  className="w-full bg-green-600/90 text-white px-4 py-2.5 rounded-md hover:bg-green-700/90 transition-colors font-medium"
                   onClick={() => scrollToSection("early-access")}
                 >
                   Get Started
