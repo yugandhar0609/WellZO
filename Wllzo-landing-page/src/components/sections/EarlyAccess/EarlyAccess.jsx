@@ -111,7 +111,7 @@ const EarlyAccess = () => {
   };
 
   return (
-    <section id="early-access" className="py-12 sm:py-16 px-4 sm:px-6 lg:px-8 bg-gray-50">
+    <section id="early-access" className="py-12 sm:py-16 px-4 sm:px-6 lg:px-8">
       <div className="max-w-3xl mx-auto text-center">
         <div className="bg-white p-6 sm:p-8 rounded-2xl shadow-xl">
           <h2 className="text-2xl sm:text-3xl font-bold mb-3 sm:mb-4">🚀 Get Early Access</h2>
