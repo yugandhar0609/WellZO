@@ -1,0 +1,18 @@
+2025-03-07 18:38:41:3841 [31merror[39m: [31mError fetching registration countdown: invalid input syntax for type uuid: "countdown"[39m
+2025-03-07 18:38:41:3841 [31merror[39m: [31mGET /v1/early-access/countdown 500 - 856.142 ms - message: Error fetching registration[39m
+2025-03-07 18:38:42:3842 [31merror[39m: [31mError fetching registration countdown: invalid input syntax for type uuid: "countdown"[39m
+2025-03-07 18:38:42:3842 [31merror[39m: [31mGET /v1/early-access/countdown 500 - 179.750 ms - message: Error fetching registration[39m
+2025-03-07 18:39:54:3954 [31merror[39m: [31mError fetching countdown timer: relation "public.countdown_timers" does not exist[39m
+2025-03-07 18:39:54:3954 [31merror[39m: [31mGET /v1/early-access/countdown 500 - 937.857 ms - message: Error fetching countdown timer[39m
+2025-03-07 18:39:54:3954 [31merror[39m: [31mError fetching countdown timer: relation "public.countdown_timers" does not exist[39m
+2025-03-07 18:39:54:3954 [31merror[39m: [31mGET /v1/early-access/countdown 500 - 498.899 ms - message: Error fetching countdown timer[39m
+2025-03-07 18:40:06:406 [31merror[39m: [31mError fetching countdown timer: relation "public.countdown_timers" does not exist[39m
+2025-03-07 18:40:06:406 [31merror[39m: [31mGET /v1/early-access/countdown 500 - 220.835 ms - message: Error fetching countdown timer[39m
+2025-03-07 18:40:06:406 [31merror[39m: [31mError fetching countdown timer: relation "public.countdown_timers" does not exist[39m
+2025-03-07 18:40:06:406 [31merror[39m: [31mGET /v1/early-access/countdown 500 - 155.527 ms - message: Error fetching countdown timer[39m
+2025-03-07 18:41:39:4139 [31merror[39m: [31mError fetching countdown timer: relation "public.countdown_timers" does not exist[39m
+2025-03-07 18:41:39:4139 [31merror[39m: [31mGET /v1/early-access/countdown 500 - 1245.943 ms - message: Error fetching countdown timer[39m
+2025-03-07 18:41:41:4141 [31merror[39m: [31mError fetching countdown timer: relation "public.countdown_timers" does not exist[39m
+2025-03-07 18:41:41:4141 [31merror[39m: [31mGET /v1/early-access/countdown 500 - 527.991 ms - message: Error fetching countdown timer[39m
+2025-03-07 18:41:42:4142 [31merror[39m: [31mError fetching countdown timer: relation "public.countdown_timers" does not exist[39m
+2025-03-07 18:41:42:4142 [31merror[39m: [31mGET /v1/early-access/countdown 500 - 416.026 ms - message: Error fetching countdown timer[39m
