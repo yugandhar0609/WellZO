@@ -24,14 +24,19 @@ const format = winston.format.combine(
   ),
 );
 
-const transports = [
-  new winston.transports.Console(),
-  new winston.transports.File({
-    filename: 'logs/error.log',
-    level: 'error',
-  }),
-  new winston.transports.File({ filename: 'logs/all.log' }),
-];
+// Only use console transport in production/serverless environments
+const transports = [new winston.transports.Console()];
+
+// Add file transports only in development environment
+if (process.env.NODE_ENV === 'development') {
+  transports.push(
+    new winston.transports.File({
+      filename: 'logs/error.log',
+      level: 'error',
+    }),
+    new winston.transports.File({ filename: 'logs/all.log' })
+  );
+}
 
 winston.addColors(logColors);
 
