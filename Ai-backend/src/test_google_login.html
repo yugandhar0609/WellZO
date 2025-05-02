@@ -1,0 +1,67 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Test Google Login</title>
+    <script src="https://accounts.google.com/gsi/client" async defer></script>
+    <style>
+        pre {
+            white-space: pre-wrap;
+            word-wrap: break-word;
+            max-width: 800px;
+        }
+    </style>
+</head>
+<body>
+    <h1>Test Google Login</h1>
+    
+    <div id="g_id_onload"
+         data-client_id="135364972111-4bt8afql29ocd80e5q6c97jle56ics7g.apps.googleusercontent.com"
+         data-callback="handleCredentialResponse"
+         data-auto_prompt="false"
+         data-ux_mode="popup">
+    </div>
+    <div class="g_id_signin"
+         data-type="standard"
+         data-size="large"
+         data-theme="outline"
+         data-text="sign_in_with"
+         data-shape="rectangular"
+         data-logo_alignment="left">
+    </div>
+
+    <div id="token-display"></div>
+    <div id="response-display"></div>
+
+    <script>
+        function handleCredentialResponse(response) {
+            console.log("Google response:", response);
+            
+            // Display the token
+            document.getElementById('token-display').innerHTML = 
+                '<h3>Google Token:</h3><pre>' + response.credential + '</pre>';
+
+            // Send the token to your backend
+            fetch('http://localhost:8000/api/users/google-login/', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({
+                    token: response.credential
+                })
+            })
+            .then(response => response.json())
+            .then(data => {
+                console.log('Success:', data);
+                document.getElementById('response-display').innerHTML = 
+                    '<h3>Backend Response:</h3><pre>' + JSON.stringify(data, null, 2) + '</pre>';
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                document.getElementById('response-display').innerHTML = 
+                    '<h3>Error:</h3><p>' + error.message + '</p>';
+            });
+        }
+    </script>
+</body>
+</html> 
