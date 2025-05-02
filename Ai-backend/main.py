@@ -2,7 +2,7 @@ import requests
 
 # Your access token from login
 access_token = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ0b2tlbl90eXBlIjoiYWNjZXNzIiwiZXhwIjoxNzQ1MTI3Njk2LCJpYXQiOjE3NDUxMjczOTYsImp0aSI6IjJmOWNhZDMzYjMxMDQ4ODViZDM1MTM2NmRmMDkwNDg5IiwidXNlcl9pZCI6Mn0.4OjLYU_cR0KFd1TiNF1tmSqXgYt1WjqGzEI0ZHfzstA"
-
+print(access_token)
 # Update profile data
 profile_url = 'http://localhost:8000/api/users/profile/'
 headers = {
