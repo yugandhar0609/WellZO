@@ -1,6 +1,8 @@
 import React, { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import Navbar from '../../components/layout/Navbar';
+import background from '../../assets/login background.jpg';
+import { GoogleLogin } from '@react-oauth/google';
+import { loginWithGoogle, loginWithEmailPassword } from '../../interceptor/services';
 
 const Login = () => {
   const navigate = useNavigate();
@@ -10,8 +12,9 @@ const Login = () => {
     remember: false
   });
 
-  // Add state for error handling
   const [error, setError] = useState('');
+  const [isLoading, setIsLoading] = useState(false);
+  const [isGoogleLoading, setIsGoogleLoading] = useState(false);
 
   const handleChange = (e) => {
     const { name, value, type, checked } = e.target;
@@ -21,155 +24,184 @@ const Login = () => {
     }));
   };
 
-  const checkProfileCompletion = async (userId) => {
-    // This would be an API call to your backend
-    // For demo, we'll simulate with localStorage
-    const userProfile = localStorage.getItem('userProfile');
-    console.log('Checking profile:', userProfile);
-    return userProfile ? JSON.parse(userProfile) : null;
+  const handleGoogleLoginSuccess = async (credentialResponse) => {
+    console.log("Google Login Success:", credentialResponse);
+    setIsGoogleLoading(true);
+    setError('');
+    try {
+      const backendResponse = await loginWithGoogle(credentialResponse);
+      console.log("Backend Response (Google):", backendResponse);
+
+      if (backendResponse && backendResponse.token) {
+        localStorage.setItem('token', backendResponse.token);
+        console.log('Google login successful, redirecting to dashboard');
+        navigate('/dashboard');
+      } else {
+        setError(backendResponse?.message || 'Google Login failed. Please try again.');
+      }
+    } catch (err) {
+      console.error("Google login backend call failed:", err);
+      setError(err?.message || 'Google login failed. Please try again.');
+    } finally {
+      setIsGoogleLoading(false);
+    }
+  };
+
+  const handleGoogleLoginError = () => {
+    console.error("Google Login Failed");
+    setError('Google login failed. Please try again.');
+    setIsGoogleLoading(false);
   };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
     setError('');
-    
-    try {
-      // Here you would typically make an API call to authenticate the user
-      console.log('Login attempt with:', formData);
-      
-      // For demo purposes, we'll simulate a login response
-      const mockLoginResponse = {
-        success: true,
-        userId: '123',
-        email: formData.email
-      };
+    setIsLoading(true);
 
-      if (mockLoginResponse.success) {
-        // Store user data
-        localStorage.setItem('user', JSON.stringify(mockLoginResponse));
-        console.log('User data saved:', mockLoginResponse);
-        
-        // Check if profile is complete
-        const userProfile = await checkProfileCompletion(mockLoginResponse.userId);
-        console.log('Profile check result:', userProfile);
-        
-        if (userProfile && Object.keys(userProfile).length > 0) {
-          console.log('Profile complete, redirecting to dashboard');
-          navigate('/dashboard');
-        } else {
-          console.log('Profile incomplete, redirecting to user-details');
-          navigate('/user-details');
-        }
+    try {
+      const backendResponse = await loginWithEmailPassword(formData.email, formData.password);
+      console.log("Backend Response (Email/Pass):", backendResponse);
+
+      if (backendResponse && backendResponse.token) {
+        localStorage.setItem('token', backendResponse.token);
+        console.log('Email/Password login successful, redirecting to dashboard');
+        navigate('/dashboard');
+      } else {
+        setError(backendResponse?.message || 'Invalid email or password.');
       }
-      
-    } catch (error) {
-      console.error('Login failed:', error);
-      setError('Login failed. Please try again.');
+    } catch (err) {
+      console.error("Email/Password login failed:", err);
+      setError(err?.message || 'Login failed. Please check your credentials.');
+    } finally {
+      setIsLoading(false);
     }
   };
 
   return (
-    <div className="bg-gray-50">
-      <Navbar />
+    <div
+      className="min-h-screen bg-cover bg-center bg-no-repeat flex items-center justify-end pr-4 md:pr-16 lg:pr-32"
+      style={{ backgroundImage: `url(${background})` }}
+    >
+      <div className="w-full max-w-[400px] transform transition-all">
+        <div className="bg-white rounded-2xl shadow-2xl p-8 backdrop-blur-sm bg-opacity-95">
+          <div className="text-center mb-8">
+            <h2 className="text-3xl font-bold bg-gradient-to-r from-emerald-600 to-teal-600 bg-clip-text text-transparent">
+              Welcome Back
+            </h2>
+            <p className="text-gray-500 mt-2">Sign in to continue your wellness journey</p>
+          </div>
 
-      {/* Login Section */}
-      <section className="min-h-screen pt-16 pb-12 px-4 sm:px-6 lg:px-8 flex items-center">
-        <div className="max-w-md mx-auto w-full">
-          <div className="bg-white p-8 rounded-2xl shadow-xl">
-            <div className="mb-8 text-center">
-              <h2 className="text-3xl font-bold text-gray-900 mb-2">Welcome Back</h2>
-              <p className="text-gray-600">Continue your health journey</p>
-            </div>
-
-            {/* Error Message */}
-            {error && (
-              <div className="mb-4 p-4 bg-red-50 border border-red-200 text-red-600 rounded-lg">
+          {error && (
+            <div className="mb-6 p-3 bg-red-50 border-l-4 border-red-500 text-red-700 text-sm rounded">
+              <p className="flex items-center">
+                <svg className="w-4 h-4 mr-2" fill="currentColor" viewBox="0 0 20 20">
+                  <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clipRule="evenodd"/>
+                </svg>
                 {error}
-              </div>
-            )}
-
-            {/* Social Login Buttons */}
-            <div className="space-y-4 mb-8">
-              <button className="w-full py-3 px-4 flex items-center justify-center space-x-4 border rounded-lg hover:bg-gray-50 transition-colors">
-                <img src="https://www.svgrepo.com/show/475656/google-color.svg" className="w-5 h-5" alt="Google" />
-                <span>Continue with Google</span>
-              </button>
-              <button className="w-full py-3 px-4 flex items-center justify-center space-x-4 bg-[#1877F2] text-white rounded-lg hover:bg-[#1865D9] transition-colors">
-                <i className="fab fa-facebook text-xl"></i>
-                <span>Continue with Facebook</span>
-              </button>
-              <button className="w-full py-3 px-4 flex items-center justify-center space-x-4 bg-black text-white rounded-lg hover:bg-gray-800 transition-colors">
-                <i className="fab fa-apple text-xl"></i>
-                <span>Continue with Apple</span>
-              </button>
+              </p>
             </div>
+          )}
 
-            <div className="relative mb-8">
-              <div className="absolute inset-0 flex items-center">
-                <div className="w-full border-t border-gray-200"></div>
-              </div>
-              <div className="relative flex justify-center text-sm">
-                <span className="px-4 bg-white text-gray-500">Or continue with email</span>
-              </div>
-            </div>
-
-            {/* Login Form */}
-            <form className="space-y-6" onSubmit={handleSubmit}>
+          <form onSubmit={handleSubmit} className="space-y-6 mb-6">
+            <div className="space-y-4">
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">Email Address</label>
+                <label className="block text-sm font-medium text-gray-700 mb-1.5">Email Address</label>
                 <input
                   type="email"
                   name="email"
                   value={formData.email}
                   onChange={handleChange}
-                  className="w-full px-4 py-3 rounded-lg border border-gray-300 focus:ring-2 focus:ring-emerald-600 focus:border-emerald-600 outline-none transition-colors"
+                  className="w-full px-4 py-3 rounded-xl border border-gray-200 focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 outline-none transition-all duration-200 bg-gray-50 hover:bg-white"
+                  placeholder="Enter your email"
                   required
+                  disabled={isLoading || isGoogleLoading}
                 />
               </div>
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">Password</label>
+                <label className="block text-sm font-medium text-gray-700 mb-1.5">Password</label>
                 <input
                   type="password"
                   name="password"
                   value={formData.password}
                   onChange={handleChange}
-                  className="w-full px-4 py-3 rounded-lg border border-gray-300 focus:ring-2 focus:ring-emerald-600 focus:border-emerald-600 outline-none transition-colors"
+                  className="w-full px-4 py-3 rounded-xl border border-gray-200 focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 outline-none transition-all duration-200 bg-gray-50 hover:bg-white"
+                  placeholder="Enter your password"
                   required
+                  disabled={isLoading || isGoogleLoading}
                 />
               </div>
-              <div className="flex items-center justify-between">
-                <div className="flex items-center">
-                  <input
-                    type="checkbox"
-                    id="remember"
-                    name="remember"
-                    checked={formData.remember}
-                    onChange={handleChange}
-                    className="rounded border-gray-300 text-emerald-600 focus:ring-emerald-500"
-                  />
-                  <label htmlFor="remember" className="ml-2 text-sm text-gray-600">Remember me</label>
-                </div>
-                <Link to="/forgot-password" className="text-sm text-emerald-600 hover:text-emerald-700">
-                  Forgot password?
-                </Link>
-              </div>
-              <button
-                type="submit"
-                className="w-full py-3 px-6 rounded-lg bg-emerald-600 text-white font-semibold hover:bg-emerald-700 transition-colors"
-              >
-                Sign In
-              </button>
-            </form>
+            </div>
 
-            <p className="mt-6 text-center text-sm text-gray-600">
-              Don't have an account?{' '}
-              <Link to="/register" className="text-emerald-600 hover:text-emerald-700 font-semibold">
-                Sign up
+            <div className="flex items-center justify-between">
+              <div className="flex items-center">
+                <input
+                  type="checkbox"
+                  id="remember"
+                  name="remember"
+                  checked={formData.remember}
+                  onChange={handleChange}
+                  className="w-4 h-4 rounded border-gray-300 text-emerald-600 focus:ring-emerald-500 transition-colors"
+                  disabled={isLoading || isGoogleLoading}
+                />
+                <label htmlFor="remember" className="ml-2 text-sm text-gray-600">Remember me</label>
+              </div>
+              <Link 
+                to="/forgot-password" 
+                className={`text-sm text-emerald-600 hover:text-emerald-700 transition-colors ${(isLoading || isGoogleLoading) ? 'pointer-events-none opacity-50' : ''}`}
+              >
+                Forgot password?
               </Link>
-            </p>
+            </div>
+
+            <button
+              type="submit"
+              disabled={isLoading || isGoogleLoading}
+              className="w-full py-3 px-6 rounded-xl bg-gradient-to-r from-emerald-500 to-teal-500 text-white font-semibold hover:from-emerald-600 hover:to-teal-600 transition-all duration-200 transform hover:scale-[1.02] disabled:opacity-70 disabled:cursor-not-allowed disabled:hover:scale-100"
+            >
+              {isLoading ? (
+                <span className="flex items-center justify-center">
+                  <svg className="animate-spin -ml-1 mr-3 h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                    <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                    <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                  </svg>
+                  Signing in...
+                </span>
+              ) : 'Sign In'}
+            </button>
+          </form>
+
+          <div className="relative my-6">
+            <div className="absolute inset-0 flex items-center">
+              <div className="w-full border-t border-gray-200"></div>
+            </div>
+            <div className="relative flex justify-center text-sm">
+              <span className="px-4 bg-white text-gray-500">Or continue with</span>
+            </div>
           </div>
+
+          <div className="flex justify-center">
+            <div className={`${isLoading ? 'opacity-50 pointer-events-none' : ''}`}>
+              <GoogleLogin
+                onSuccess={handleGoogleLoginSuccess}
+                onError={handleGoogleLoginError}
+                theme="outline"
+                size="large"
+                width="330px"
+              />
+            </div>
+          </div>
+
+          <p className="mt-8 text-center text-sm text-gray-600">
+            Don't have an account?{' '}
+            <Link 
+              to="/register" 
+              className={`font-semibold text-emerald-600 hover:text-emerald-700 transition-colors ${(isLoading || isGoogleLoading) ? 'pointer-events-none opacity-50' : ''}`}
+            >
+              Sign up for free
+            </Link>
+          </p>
         </div>
-      </section>
+      </div>
     </div>
   );
 };

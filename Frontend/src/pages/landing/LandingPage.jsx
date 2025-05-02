@@ -1,6 +1,6 @@
 import MainContent from "./MainContent";
-import Pricing from "./Pricing";
-import EarlyAccess from "./EarlyAccess";
+// import Pricing from "./Pricing";
+// import EarlyAccess from "./EarlyAccess";
 import Navbar from "./Navbar";
 import Footer from "./Footer";
 
@@ -9,8 +9,8 @@ const LandingPage = () => {
     <main>
       <Navbar />
       <MainContent />
-      <Pricing />
-      <EarlyAccess />
+      {/* <Pricing /> */}
+      {/* <EarlyAccess /> */}
       <Footer />
     </main>
   );
