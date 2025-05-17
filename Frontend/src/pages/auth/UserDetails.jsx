@@ -1,5 +1,6 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { getUserProfile, updateUserProfile } from '../../interceptor/services';
 
 const UserDetails = () => {
   const navigate = useNavigate();
@@ -8,20 +9,20 @@ const UserDetails = () => {
 
   const [formData, setFormData] = useState({
     // Basic Info
+    full_name: '',
     nationality: '',
     state: '',
+    city: '',
     language: '',
-    profession: '',
     age: '',
     gender: '',
-    height: '',
-    weight: '',
+    date_of_birth: '',
+    location: '',
+    bio: '',
 
     // Lifestyle
     activityLevel: '',
     favoriteActivities: [],
-    wakeUpTime: '',
-    bedTime: '',
     dietaryPreferences: [],
 
     // Health
@@ -33,14 +34,48 @@ const UserDetails = () => {
     goalDetails: ''
   });
 
+  const [error, setError] = useState('');
+  const [infoMessage, setInfoMessage] = useState('');
+  const [isLoading, setIsLoading] = useState(false);
+
+  useEffect(() => {
+    const fetchProfile = async () => {
+      setIsLoading(true);
+      setError('');
+      setInfoMessage('');
+      const response = await getUserProfile();
+      if (response.success && response.data) {
+        const profile = response.data;
+        setFormData(prev => ({
+          ...prev,
+          full_name: profile.full_name || '',
+          nationality: profile.nationality || '',
+          state: profile.state || '',
+          city: profile.city || '',
+          language: profile.preferred_language || '',
+          age: profile.age?.toString() || '',
+          gender: profile.gender || '',
+          date_of_birth: profile.date_of_birth || '',
+          location: profile.location || '',
+          bio: profile.bio || '',
+        }));
+      } else if (!response.success) {
+        console.warn("Could not load profile. A new profile will be created on save.", response.message);
+      }
+      setIsLoading(false);
+    };
+
+    fetchProfile();
+  }, []);
+
   const handleChange = (e) => {
     const { name, value, type, checked } = e.target;
     if (type === 'checkbox') {
       setFormData(prev => ({
         ...prev,
         [name]: checked 
-          ? [...prev[name], value]
-          : prev[name].filter(item => item !== value)
+          ? [...(prev[name] || []), value]
+          : (prev[name] || []).filter(item => item !== value)
       }));
     } else {
       setFormData(prev => ({
@@ -50,59 +85,82 @@ const UserDetails = () => {
     }
   };
 
-  const handleSubmit = (e) => {
-    if (e) {
-      e.preventDefault();
+  const handleSubmit = async (e) => {
+    if (e) e.preventDefault();
+    setError('');
+    setInfoMessage('');
+
+    if (currentStep === totalSteps) {
+      if (!formData.full_name) {
+        setError('Full name is required.');
+        setCurrentStep(1);
+        return;
+      }
+      if (!formData.age || parseInt(formData.age, 10) <= 0) {
+        setError('Please enter a valid age.');
+        setCurrentStep(1);
+        return;
+      }
+      if (!formData.gender) {
+        setError('Please select your gender.');
+        setCurrentStep(1);
+        return;
+      }
     }
-    // Validate required fields
-    const requiredFields = {
-      nationality: 'Nationality',
-      state: 'State/Region',
-      age: 'Age',
-      gender: 'Gender'
+
+    setIsLoading(true);
+
+    let consolidatedBio = formData.bio;
+    if (formData.activityLevel) consolidatedBio += `\nActivity Level: ${formData.activityLevel}`;
+    if (formData.allergies) consolidatedBio += `\nAllergies: ${formData.allergies}`;
+    if (formData.primaryGoal) consolidatedBio += `\nPrimary Goal: ${formData.primaryGoal}`;
+    if (formData.goalDetails) consolidatedBio += `\nGoal Details: ${formData.goalDetails}`;
+    if (formData.dietaryPreferences.length > 0) consolidatedBio += `\nDietary Preferences: ${formData.dietaryPreferences.join(', ')}`;
+    if (formData.medicalConditions.length > 0) consolidatedBio += `\nMedical Conditions: ${formData.medicalConditions.join(', ')}`;
+
+    const profilePayload = {
+      full_name: formData.full_name,
+      nationality: formData.nationality,
+      state: formData.state,
+      city: formData.city,
+      preferred_language: formData.language,
+      age: formData.age ? parseInt(formData.age, 10) : null,
+      gender: formData.gender,
+      date_of_birth: formData.date_of_birth || null,
+      location: formData.location,
+      bio: consolidatedBio.trim(),
     };
 
-    const missingFields = Object.entries(requiredFields)
-      .filter(([key]) => !formData[key])
-      .map(([_, label]) => label);
-
-    if (missingFields.length > 0) {
-      alert(`Please fill in the following required fields: ${missingFields.join(', ')}`);
-      return;
-    }
-
-    // Save user details to localStorage
     try {
-      // For testing, create a mock user if none exists
-      const mockUser = {
-        userId: 'test-user',
-        email: 'test@example.com'
-      };
-
-      // Combine user data with profile data
-      const completeProfile = {
-        ...formData,
-        ...mockUser
-      };
-
-      console.log('Saving profile data:', completeProfile);
-      localStorage.setItem('userProfile', JSON.stringify(completeProfile));
-      localStorage.setItem('user', JSON.stringify(mockUser)); // Save mock user data
-      console.log('Profile data saved successfully');
-      
-      // Navigate to dashboard after successful save
-      navigate('/dashboard');
-    } catch (error) {
-      console.error('Error saving profile:', error);
-      alert('There was an error saving your profile. Please try again.');
+      const response = await updateUserProfile(profilePayload);
+      if (response.success) {
+        setInfoMessage(response.message || 'Profile updated successfully!');
+        localStorage.setItem('isProfileComplete', 'true');
+        setTimeout(() => {
+          navigate('/dashboard');
+        }, 1500);
+      } else {
+        setError(response.message || 'Failed to update profile. Please check the details.');
+      }
+    } catch (err) {
+      console.error('Error submitting profile:', err);
+      setError('An unexpected error occurred. Please try again.');
+    } finally {
+      setIsLoading(false);
     }
   };
 
   const nextStep = () => {
+    if (currentStep === 1) {
+      if (!formData.full_name) { setError('Full name is required.'); return; }
+      if (!formData.age || parseInt(formData.age, 10) <= 0) { setError('Valid age is required.'); return; }
+      if (!formData.gender) { setError('Gender is required.'); return; }
+    }
+    setError('');
+
     if (currentStep < totalSteps) {
       setCurrentStep(prev => prev + 1);
     } else {
-      // If we're on the last step, submit the form
       handleSubmit();
     }
   };
@@ -115,7 +173,6 @@ const UserDetails = () => {
 
   return (
     <div className="min-h-screen bg-gray-50">
-      {/* Progress Bar */}
       <div className="fixed top-0 w-full bg-white shadow-sm z-40">
         <div className="max-w-4xl mx-auto px-4 py-4">
           <div className="flex justify-between mb-2">
@@ -131,16 +188,41 @@ const UserDetails = () => {
         </div>
       </div>
 
-      {/* Main Form */}
       <div className="pt-24 pb-12 px-4">
         <div className="max-w-4xl mx-auto">
+          {isLoading && (
+            <div className="mb-4 p-3 bg-blue-100 border-l-4 border-blue-500 text-blue-700 text-sm rounded">
+              Processing...
+            </div>
+          )}
+          {infoMessage && (
+            <div className="mb-4 p-3 bg-green-100 border-l-4 border-green-500 text-green-700 text-sm rounded">
+              {infoMessage}
+            </div>
+          )}
+          {error && (
+            <div className="mb-4 p-3 bg-red-100 border-l-4 border-red-500 text-red-700 text-sm rounded">
+              {error}
+            </div>
+          )}
+
           <div className="bg-white rounded-2xl shadow-xl p-8">
             <form onSubmit={(e) => e.preventDefault()} className="space-y-8">
-              {/* Step 1: Basic Information */}
               {currentStep === 1 && (
                 <div>
                   <h2 className="text-3xl font-bold text-gray-900 mb-6">Tell us about yourself</h2>
                   <div className="grid md:grid-cols-2 gap-6">
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-2">Full Name <span className="text-red-500">*</span></label>
+                      <input
+                        type="text"
+                        name="full_name"
+                        value={formData.full_name}
+                        onChange={handleChange}
+                        className="w-full px-4 py-3 rounded-lg border border-gray-300 focus:ring-2 focus:ring-emerald-600 focus:border-emerald-600"
+                        required
+                      />
+                    </div>
                     <div>
                       <label className="block text-sm font-medium text-gray-700 mb-2">Nationality</label>
                       <select 
@@ -148,13 +230,14 @@ const UserDetails = () => {
                         value={formData.nationality}
                         onChange={handleChange}
                         className="w-full px-4 py-3 rounded-lg border border-gray-300 focus:ring-2 focus:ring-emerald-600 focus:border-emerald-600"
-                        required
                       >
                         <option value="">Select nationality</option>
-                        <option value="us">United States</option>
-                        <option value="uk">United Kingdom</option>
-                        <option value="in">India</option>
-                        <option value="au">Australia</option>
+                        <option value="Indian">Indian</option>
+                        <option value="American">American</option>
+                        <option value="British">British</option>
+                        <option value="Australian">Australian</option>
+                        <option value="Canadian">Canadian</option>
+                        <option value="Other">Other</option>
                       </select>
                     </div>
                     <div>
@@ -165,11 +248,20 @@ const UserDetails = () => {
                         value={formData.state}
                         onChange={handleChange}
                         className="w-full px-4 py-3 rounded-lg border border-gray-300 focus:ring-2 focus:ring-emerald-600 focus:border-emerald-600"
-                        required
                       />
                     </div>
                     <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-2">Age</label>
+                      <label className="block text-sm font-medium text-gray-700 mb-2">City</label>
+                      <input
+                        type="text"
+                        name="city"
+                        value={formData.city}
+                        onChange={handleChange}
+                        className="w-full px-4 py-3 rounded-lg border border-gray-300 focus:ring-2 focus:ring-emerald-600 focus:border-emerald-600"
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-2">Age <span className="text-red-500">*</span></label>
                       <input
                         type="number"
                         name="age"
@@ -177,10 +269,11 @@ const UserDetails = () => {
                         onChange={handleChange}
                         className="w-full px-4 py-3 rounded-lg border border-gray-300 focus:ring-2 focus:ring-emerald-600 focus:border-emerald-600"
                         required
+                        min="0"
                       />
                     </div>
                     <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-2">Gender</label>
+                      <label className="block text-sm font-medium text-gray-700 mb-2">Gender <span className="text-red-500">*</span></label>
                       <select
                         name="gender"
                         value={formData.gender}
@@ -192,13 +285,56 @@ const UserDetails = () => {
                         <option value="male">Male</option>
                         <option value="female">Female</option>
                         <option value="other">Other</option>
+                        <option value="prefer_not_to_say">Prefer not to say</option>
                       </select>
+                    </div>
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-2">Date of Birth</label>
+                      <input
+                        type="date"
+                        name="date_of_birth"
+                        value={formData.date_of_birth}
+                        onChange={handleChange}
+                        className="w-full px-4 py-3 rounded-lg border border-gray-300 focus:ring-2 focus:ring-emerald-600 focus:border-emerald-600"
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-2">Preferred Language</label>
+                      <input
+                        type="text"
+                        name="language"
+                        value={formData.language}
+                        onChange={handleChange}
+                        className="w-full px-4 py-3 rounded-lg border border-gray-300 focus:ring-2 focus:ring-emerald-600 focus:border-emerald-600"
+                        placeholder="e.g., English, Spanish"
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-2">Location (e.g. Country)</label>
+                      <input
+                        type="text"
+                        name="location"
+                        value={formData.location}
+                        onChange={handleChange}
+                        className="w-full px-4 py-3 rounded-lg border border-gray-300 focus:ring-2 focus:ring-emerald-600 focus:border-emerald-600"
+                        placeholder="e.g., USA, India"
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-2">Short Bio (Other details from next steps will be added here)</label>
+                      <textarea
+                        name="bio"
+                        value={formData.bio}
+                        onChange={handleChange}
+                        rows="3"
+                        className="w-full px-4 py-3 rounded-lg border border-gray-300 focus:ring-2 focus:ring-emerald-600 focus:border-emerald-600"
+                        placeholder="A little about yourself... Other details like activity level, allergies, goals will be appended here if not stored separately."
+                      ></textarea>
                     </div>
                   </div>
                 </div>
               )}
 
-              {/* Step 2: Lifestyle */}
               {currentStep === 2 && (
                 <div>
                   <h2 className="text-3xl font-bold text-gray-900 mb-6">Your Lifestyle</h2>
@@ -207,7 +343,7 @@ const UserDetails = () => {
                       <label className="block text-sm font-medium text-gray-700 mb-2">Activity Level</label>
                       <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
                         {['Sedentary', 'Light', 'Moderate', 'Very Active'].map((level) => (
-                          <label key={level} className="relative flex flex-col items-center p-4 border rounded-xl cursor-pointer hover:bg-gray-50">
+                          <label key={level} className={`relative flex flex-col items-center p-4 border rounded-xl cursor-pointer hover:bg-gray-50 ${formData.activityLevel === level.toLowerCase() ? 'border-emerald-500 ring-2 ring-emerald-500' : 'border-gray-300'}`}>
                             <input
                               type="radio"
                               name="activityLevel"
@@ -217,60 +353,51 @@ const UserDetails = () => {
                               className="sr-only"
                             />
                             <div className={`p-2 rounded-full ${formData.activityLevel === level.toLowerCase() ? 'bg-emerald-100' : 'bg-gray-100'}`}>
-                              <i className={`fas ${level === 'Sedentary' ? 'fa-couch' : level === 'Light' ? 'fa-walking' : level === 'Moderate' ? 'fa-running' : 'fa-dumbbell'} text-2xl ${formData.activityLevel === level.toLowerCase() ? 'text-emerald-600' : 'text-gray-600'}`}></i>
+                              <span className={`text-2xl ${formData.activityLevel === level.toLowerCase() ? 'text-emerald-600' : 'text-gray-600'}`}>{level.charAt(0)}</span> 
                             </div>
                             <span className="mt-2 font-medium">{level}</span>
                           </label>
                         ))}
                       </div>
                     </div>
-
                     <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-2">Daily Schedule</label>
-                      <div className="grid md:grid-cols-2 gap-6">
-                        <div>
-                          <label className="block text-xs text-gray-500 mb-1">Wake-up Time</label>
-                          <input
-                            type="time"
-                            name="wakeUpTime"
-                            value={formData.wakeUpTime}
-                            onChange={handleChange}
-                            className="w-full px-4 py-3 rounded-lg border border-gray-300 focus:ring-2 focus:ring-emerald-600 focus:border-emerald-600"
-                          />
-                        </div>
-                        <div>
-                          <label className="block text-xs text-gray-500 mb-1">Bedtime</label>
-                          <input
-                            type="time"
-                            name="bedTime"
-                            value={formData.bedTime}
-                            onChange={handleChange}
-                            className="w-full px-4 py-3 rounded-lg border border-gray-300 focus:ring-2 focus:ring-emerald-600 focus:border-emerald-600"
-                          />
-                        </div>
+                      <label className="block text-sm font-medium text-gray-700 mb-2">Dietary Preferences (select multiple)</label>
+                      <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
+                        {['Vegetarian', 'Vegan', 'Gluten-Free', 'Keto', 'Paleo', 'Low-Carb'].map((preference) => (
+                          <label key={preference} className={`flex items-center p-4 border rounded-lg cursor-pointer hover:bg-gray-50 ${formData.dietaryPreferences.includes(preference.toLowerCase()) ? 'border-emerald-500 ring-2 ring-emerald-500' : 'border-gray-300'}`}>
+                            <input
+                              type="checkbox"
+                              name="dietaryPreferences"
+                              value={preference.toLowerCase()}
+                              checked={formData.dietaryPreferences.includes(preference.toLowerCase())}
+                              onChange={handleChange}
+                              className="form-checkbox rounded h-5 w-5 text-emerald-600 border-gray-300 focus:ring-emerald-500 mr-3"
+                            />
+                            <span>{preference}</span>
+                          </label>
+                        ))}
                       </div>
                     </div>
                   </div>
                 </div>
               )}
 
-              {/* Step 3: Health Background */}
               {currentStep === 3 && (
                 <div>
                   <h2 className="text-3xl font-bold text-gray-900 mb-6">Health Background</h2>
                   <div className="space-y-6">
                     <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-2">Do you have any pre-existing medical conditions?</label>
+                      <label className="block text-sm font-medium text-gray-700 mb-2">Pre-existing medical conditions (select multiple)</label>
                       <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
-                        {['Diabetes', 'Hypertension', 'Heart Disease', 'Asthma', 'Thyroid'].map((condition) => (
-                          <label key={condition} className="flex items-center p-4 border rounded-lg cursor-pointer hover:bg-gray-50">
+                        {['Diabetes', 'Hypertension', 'Heart Disease', 'Asthma', 'Thyroid', 'None'].map((condition) => (
+                          <label key={condition} className={`flex items-center p-4 border rounded-lg cursor-pointer hover:bg-gray-50 ${formData.medicalConditions.includes(condition.toLowerCase()) ? 'border-emerald-500 ring-2 ring-emerald-500' : 'border-gray-300'}`}>
                             <input
                               type="checkbox"
                               name="medicalConditions"
                               value={condition.toLowerCase()}
                               checked={formData.medicalConditions.includes(condition.toLowerCase())}
                               onChange={handleChange}
-                              className="rounded border-gray-300 text-emerald-600 mr-3"
+                              className="form-checkbox rounded h-5 w-5 text-emerald-600 border-gray-300 focus:ring-emerald-500 mr-3"
                             />
                             <span>{condition}</span>
                           </label>
@@ -278,13 +405,13 @@ const UserDetails = () => {
                       </div>
                     </div>
                     <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-2">Any allergies?</label>
+                      <label className="block text-sm font-medium text-gray-700 mb-2">Allergies</label>
                       <input
                         type="text"
                         name="allergies"
                         value={formData.allergies}
                         onChange={handleChange}
-                        placeholder="Enter allergies (if any)"
+                        placeholder="e.g., Peanuts, Shellfish, None"
                         className="w-full px-4 py-3 rounded-lg border border-gray-300 focus:ring-2 focus:ring-emerald-600 focus:border-emerald-600"
                       />
                     </div>
@@ -292,32 +419,27 @@ const UserDetails = () => {
                 </div>
               )}
 
-              {/* Step 4: Goals */}
               {currentStep === 4 && (
                 <div>
                   <h2 className="text-3xl font-bold text-gray-900 mb-6">Your Health Goals</h2>
                   <div className="space-y-6">
                     <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-2">What's your primary goal?</label>
+                      <label className="block text-sm font-medium text-gray-700 mb-2">Primary Goal</label>
                       <div className="grid md:grid-cols-3 gap-4">
-                        {[
-                          { name: 'Weight Loss', icon: 'weight' },
-                          { name: 'Muscle Gain', icon: 'dumbbell' },
-                          { name: 'Overall Health', icon: 'heart' }
-                        ].map((goal) => (
-                          <label key={goal.name} className="relative flex flex-col items-center p-6 border rounded-xl cursor-pointer hover:bg-gray-50">
+                        {['Weight Loss', 'Muscle Gain', 'Overall Health', 'Improve Stamina', 'Reduce Stress'].map((goal) => (
+                          <label key={goal} className={`relative flex flex-col items-center p-6 border rounded-xl cursor-pointer hover:bg-gray-50 ${formData.primaryGoal === goal.toLowerCase().replace(/\s+/g, '-') ? 'border-emerald-500 ring-2 ring-emerald-500' : 'border-gray-300'}`}>
                             <input
                               type="radio"
                               name="primaryGoal"
-                              value={goal.name.toLowerCase().replace(' ', '-')}
-                              checked={formData.primaryGoal === goal.name.toLowerCase().replace(' ', '-')}
+                              value={goal.toLowerCase().replace(/\s+/g, '-')}
+                              checked={formData.primaryGoal === goal.toLowerCase().replace(/\s+/g, '-')}
                               onChange={handleChange}
                               className="sr-only"
                             />
-                            <div className={`p-3 rounded-full ${formData.primaryGoal === goal.name.toLowerCase().replace(' ', '-') ? 'bg-emerald-100' : 'bg-gray-100'}`}>
-                              <i className={`fas fa-${goal.icon} text-3xl ${formData.primaryGoal === goal.name.toLowerCase().replace(' ', '-') ? 'text-emerald-600' : 'text-gray-600'}`}></i>
+                            <div className={`p-3 rounded-full ${formData.primaryGoal === goal.toLowerCase().replace(/\s+/g, '-') ? 'bg-emerald-100' : 'bg-gray-100'}`}>
+                              <span className={`text-3xl ${formData.primaryGoal === goal.toLowerCase().replace(/\s+/g, '-') ? 'text-emerald-600' : 'text-gray-600'}`}>{goal.substring(0,2)}</span>
                             </div>
-                            <span className="mt-2 font-medium">{goal.name}</span>
+                            <span className="mt-2 font-medium text-center">{goal}</span>
                           </label>
                         ))}
                       </div>
@@ -330,30 +452,32 @@ const UserDetails = () => {
                         onChange={handleChange}
                         rows="4"
                         className="w-full px-4 py-3 rounded-lg border border-gray-300 focus:ring-2 focus:ring-emerald-600 focus:border-emerald-600"
-                        placeholder="What would you like to achieve?"
+                        placeholder="What would you like to achieve? Be specific."
                       ></textarea>
                     </div>
                   </div>
                 </div>
               )}
 
-              {/* Navigation Buttons */}
               <div className="flex justify-between pt-6">
                 {currentStep > 1 && (
                   <button
                     type="button"
                     onClick={prevStep}
-                    className="px-6 py-3 rounded-lg border-2 border-emerald-600 text-emerald-600 font-semibold hover:bg-emerald-50 transition-colors"
+                    className="px-6 py-3 rounded-lg border-2 border-emerald-600 text-emerald-600 font-semibold hover:bg-emerald-50 transition-colors disabled:opacity-50"
+                    disabled={isLoading}
                   >
                     Previous
                   </button>
                 )}
+                <div className="flex-grow"></div>
                 <button
                   type="button"
                   onClick={nextStep}
-                  className="px-6 py-3 rounded-lg bg-emerald-600 text-white font-semibold hover:bg-emerald-700 transition-colors ml-auto"
+                  disabled={isLoading}
+                  className="px-6 py-3 rounded-lg bg-emerald-600 text-white font-semibold hover:bg-emerald-700 transition-colors ml-auto disabled:opacity-50"
                 >
-                  {currentStep === totalSteps ? 'Complete Profile' : 'Next'}
+                  {isLoading ? (currentStep === totalSteps ? 'Saving Profile...' : 'Processing...') : (currentStep === totalSteps ? 'Complete Profile & View Dashboard' : 'Next Step')}
                 </button>
               </div>
             </form>

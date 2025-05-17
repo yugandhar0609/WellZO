@@ -164,3 +164,55 @@ export const confirmPasswordReset = async (email, otp, new_password) => {
     };
   }
 };
+
+export const getUserProfile = async () => {
+  try {
+    const res = await interceptors.get("users/profile/");
+    // The backend UserProfileView returns the profile data directly on success
+    return {
+      success: true,
+      data: res.data, // res.data should be the profile object
+    };
+  } catch (error) {
+    console.error("Get User Profile error:", error.response?.data || error);
+    return {
+      success: false,
+      message: error.response?.data?.detail || error.message || "Failed to fetch user profile.",
+      error: error.response?.data || error,
+    };
+  }
+};
+
+export const updateUserProfile = async (profileData) => {
+  try {
+    const res = await interceptors.put("users/profile/", profileData);
+    // The backend UserProfileView returns the updated profile data on success
+    return {
+      success: true,
+      message: "Profile updated successfully.", // Or use a message from backend if available
+      data: res.data,
+    };
+  } catch (error) {
+    console.error("Update User Profile error:", error.response?.data || error);
+    // Backend might return specific field errors in error.response.data
+    // For a generic message:
+    let detailedError = "Failed to update user profile.";
+    if (typeof error.response?.data === 'object' && error.response.data !== null) {
+        const errorMessages = Object.entries(error.response.data)
+            .map(([key, value]) => `${key}: ${Array.isArray(value) ? value.join(', ') : value}`)
+            .join('; ');
+        if (errorMessages) detailedError = errorMessages;
+    } else if (error.response?.data?.detail) {
+        detailedError = error.response.data.detail;
+    } else if (error.message) {
+        detailedError = error.message;
+    }
+    
+    return {
+      success: false,
+      message: detailedError,
+      errors: error.response?.data, // Keep the original errors object
+      error: error.response?.data || error,
+    };
+  }
+};
