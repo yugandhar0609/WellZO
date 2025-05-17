@@ -48,21 +48,23 @@ const Register = () => {
       const backendResponse = await loginWithGoogle(credentialResponse);
       console.log("Backend Response (Google Register/Login):", backendResponse);
 
-      if (backendResponse && backendResponse.token) {
-        localStorage.setItem('token', backendResponse.token);
-        if (backendResponse.isProfileComplete === false) {
-           console.log('Registration via Google successful, redirecting to user-details');
-           navigate('/user-details');
+      if (backendResponse.success) {
+        setInfoMessage(backendResponse.message);
+        
+        // Redirect based on profile completion
+        if (!backendResponse.isProfileComplete) {
+          console.log('Registration via Google successful, redirecting to user-details');
+          navigate('/user-details');
         } else {
-           console.log('Login/Registration via Google successful, redirecting to dashboard');
-           navigate('/dashboard'); 
+          console.log('Login/Registration via Google successful, redirecting to dashboard');
+          navigate('/dashboard');
         }
       } else {
-        setError(backendResponse?.message || 'Google Sign-Up failed. Please try again.');
+        setError(backendResponse.message || 'Google Sign-Up failed. Please try again.');
       }
     } catch (err) {
       console.error("Google sign-up backend call failed:", err);
-      setError(err?.message || 'Google Sign-Up failed. Please try again.');
+      setError(err.message || 'Google Sign-Up failed. Please try again.');
     } finally {
       setIsGoogleLoading(false);
     }

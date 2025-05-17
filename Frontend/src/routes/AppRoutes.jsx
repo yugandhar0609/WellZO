@@ -9,6 +9,7 @@ import LandingPage from '../pages/landing/LandingPage';
 import Login from '../pages/auth/Login';
 import Register from '../pages/auth/Register';
 import UserDetails from '../pages/auth/UserDetails';
+import ForgotPassword from '../pages/auth/ForgotPassword';
 
 // Dashboard Pages
 import Dashboard from '../pages/dashboard/Dashboard';
@@ -35,6 +36,7 @@ const AppRoutes = () => {
       <Route path="/login" element={<Login />} />
       <Route path="/register" element={<Register />} />
       <Route path="/user-details" element={<UserDetails />} />
+      <Route path="/forgot-password" element={<ForgotPassword />} />
 
       {/* Protected Dashboard Routes - Consider wrapping these later */}
       <Route path="/dashboard" element={<Dashboard />} />

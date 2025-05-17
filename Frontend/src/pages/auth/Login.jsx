@@ -15,6 +15,7 @@ const Login = () => {
   const [error, setError] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const [isGoogleLoading, setIsGoogleLoading] = useState(false);
+  const [infoMessage, setInfoMessage] = useState('');
 
   const handleChange = (e) => {
     const { name, value, type, checked } = e.target;
@@ -32,16 +33,23 @@ const Login = () => {
       const backendResponse = await loginWithGoogle(credentialResponse);
       console.log("Backend Response (Google):", backendResponse);
 
-      if (backendResponse && backendResponse.token) {
-        localStorage.setItem('token', backendResponse.token);
-        console.log('Google login successful, redirecting to dashboard');
-        navigate('/dashboard');
+      if (backendResponse.success) {
+        setInfoMessage(backendResponse.message);
+        
+        // Redirect based on profile completion
+        if (!backendResponse.isProfileComplete) {
+          console.log('Google login successful, redirecting to user-details');
+          navigate('/user-details');
+        } else {
+          console.log('Google login successful, redirecting to dashboard');
+          navigate('/dashboard');
+        }
       } else {
-        setError(backendResponse?.message || 'Google Login failed. Please try again.');
+        setError(backendResponse.message || 'Google Login failed. Please try again.');
       }
     } catch (err) {
       console.error("Google login backend call failed:", err);
-      setError(err?.message || 'Google login failed. Please try again.');
+      setError(err.message || 'Google login failed. Please try again.');
     } finally {
       setIsGoogleLoading(false);
     }
@@ -62,10 +70,28 @@ const Login = () => {
       const backendResponse = await loginWithEmailPassword(formData.email, formData.password);
       console.log("Backend Response (Email/Pass):", backendResponse);
 
-      if (backendResponse && backendResponse.token) {
-        localStorage.setItem('token', backendResponse.token);
-        console.log('Email/Password login successful, redirecting to dashboard');
-        navigate('/dashboard');
+      if (backendResponse.success) {
+        // Store tokens and user data
+        localStorage.setItem('tokens', JSON.stringify(backendResponse.tokens));
+        localStorage.setItem('user', JSON.stringify(backendResponse.user));
+        
+        // Check if profile is complete by checking required fields
+        const profile = backendResponse.profile;
+        const isProfileComplete = profile && 
+          profile.full_name && 
+          profile.age && 
+          profile.gender && 
+          profile.nationality && 
+          profile.state && 
+          profile.city;
+
+        if (!isProfileComplete) {
+          console.log('Login successful, redirecting to user-details');
+          navigate('/user-details');
+        } else {
+          console.log('Login successful, redirecting to dashboard');
+          navigate('/dashboard');
+        }
       } else {
         setError(backendResponse?.message || 'Invalid email or password.');
       }

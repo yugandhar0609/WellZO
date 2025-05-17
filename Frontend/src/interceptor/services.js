@@ -1,53 +1,166 @@
 import interceptors from "./axios";
 
+// Helper function to safely store data
+const safeStore = (key, data) => {
+  try {
+    localStorage.setItem(key, JSON.stringify(data));
+  } catch (e) {
+    console.error(`Failed to store ${key}:`, e);
+  }
+};
+
 // User authentication services
 export const loginWithGoogle = async (credentialResponse) => {
   try {
-    // Send the credential object received from Google to your backend
-    // The backend should verify the token and return user info/JWT token
-    const res = await interceptors.post("v1/auth/google/login/", credentialResponse);
-    return res.data; // Should contain user info and your backend's JWT token
+    const res = await interceptors.post("users/google-login/", {
+      token: credentialResponse.credential
+    });
+    
+    if (!res.data.success) {
+      throw new Error(res.data.message || 'Google authentication failed');
+    }
+    
+    handleAuthResponse(res.data);
+    
+    return {
+      success: true,
+      message: res.data.message,
+      user: res.data.user,
+      tokens: res.data.tokens,
+      isProfileComplete: res.data.isProfileComplete
+    };
   } catch (error) {
-    console.error("Google login error in service:", error.response?.data || error);
-    throw error.response?.data || error;
+    handleAuthError(error);
+    throw {
+      success: false,
+      message: error.response?.data?.message || error.message || 'Google authentication failed',
+      error: error.response?.data || error
+    };
   }
 };
 
 export const loginWithEmailPassword = async (email, password) => {
   try {
-    // Send email and password to your backend login endpoint
-    const res = await interceptors.post("v1/auth/login/", { email, password });
-    return res.data; // Should contain user info and your backend's JWT token
+    const res = await interceptors.post("users/login/", { email, password });
+    handleAuthResponse(res.data);
+    return {
+      ...res.data,
+      isProfileComplete: res.data.isProfileComplete || false
+    };
   } catch (error) {
-    console.error("Email/Password login error in service:", error.response?.data || error);
-    throw error.response?.data || error;
+    handleAuthError(error);
+    throw error;
   }
 };
 
-// Step 1: Initiate Registration & Send OTP
+// Step 1: Registration
 export const initiateRegistration = async (registrationData) => {
-  // Expects an object like { name, email, password }
   try {
-    // Send name, email, password to your backend registration endpoint
-    // Backend should generate OTP, store it (hashed), and send email
-    const res = await interceptors.post("v1/auth/register/initiate/", registrationData);
-    // Backend should return success if OTP email was sent successfully
-    return res.data; 
+    const res = await interceptors.post("users/register/", registrationData);
+    // Store email temporarily for OTP verification
+    if (res.data.email) {
+      localStorage.setItem("pendingVerificationEmail", res.data.email);
+    }
+    return {
+      success: true,
+      message: res.data.message,
+      email: res.data.email
+    };
   } catch (error) {
-    console.error("Registration initiation error in service:", error.response?.data || error);
-    throw error.response?.data || { message: "Registration failed due to an unexpected error." }; 
+    console.error("Registration error:", error.response?.data || error);
+    throw {
+      success: false,
+      message: error.response?.data?.message || "Registration failed",
+      error: error.response?.data || error
+    };
   }
 };
 
 // Step 2: Verify OTP
 export const verifyOtp = async (email, otp) => {
-   try {
-    // Send email and OTP to your backend verification endpoint
-    const res = await interceptors.post("v1/auth/register/verify/", { email, otp });
-    // Backend should verify OTP, mark user as active, and maybe return JWT
-    return res.data; 
+  try {
+    const res = await interceptors.post("users/verify-otp/", { 
+      email: email || localStorage.getItem("pendingVerificationEmail"), 
+      otp 
+    });
+    
+    // Clear pending verification email
+    localStorage.removeItem("pendingVerificationEmail");
+    
+    // Store tokens and user data if verification successful
+    if (res.data.tokens) {
+      handleAuthResponse(res.data);
+    }
+    
+    return {
+      success: true,
+      message: res.data.message,
+      user: res.data.user,
+      tokens: res.data.tokens
+    };
   } catch (error) {
-    console.error("OTP verification error in service:", error.response?.data || error);
-    throw error.response?.data || { message: "OTP verification failed." }; 
+    console.error("OTP verification error:", error.response?.data || error);
+    throw {
+      success: false,
+      message: error.response?.data?.message || "OTP verification failed",
+      error: error.response?.data || error
+    };
+  }
+};
+
+// Helper functions
+const handleAuthResponse = (data) => {
+  if (data.tokens) {
+    safeStore("tokens", data.tokens);
+  }
+  if (data.user) {
+    safeStore("user", data.user);
+  }
+};
+
+const handleAuthError = (error) => {
+  console.error("Auth Error:", error.response?.data || error);
+  if (error.response?.status === 401) {
+    localStorage.removeItem("tokens");
+    localStorage.removeItem("user");
+  }
+};
+
+export const requestPasswordResetOtp = async (email) => {
+  try {
+    const res = await interceptors.post("users/password-reset-request/", { email });
+    return {
+      success: res.data.success !== undefined ? res.data.success : true, // Assume success if not specified, for generic msgs
+      message: res.data.message,
+    };
+  } catch (error) {
+    console.error("Request Password Reset OTP error:", error.response?.data || error);
+    return { // Return a structured error object
+      success: false,
+      message: error.response?.data?.message || "Failed to request password reset. Please try again.",
+      error: error.response?.data || error,
+    };
+  }
+};
+
+export const confirmPasswordReset = async (email, otp, new_password) => {
+  try {
+    const res = await interceptors.post("users/password-reset-confirm/", {
+      email,
+      otp,
+      new_password,
+    });
+    return {
+      success: res.data.success,
+      message: res.data.message,
+    };
+  } catch (error) {
+    console.error("Confirm Password Reset error:", error.response?.data || error);
+    return { // Return a structured error object
+      success: false,
+      message: error.response?.data?.message || "Failed to reset password. Please try again.",
+      errors: error.response?.data?.errors, // Include detailed errors if available
+      error: error.response?.data || error,
+    };
   }
 };
