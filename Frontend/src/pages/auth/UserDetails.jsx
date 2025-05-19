@@ -1,9 +1,11 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { getUserProfile, updateUserProfile } from '../../interceptor/services';
+import { getUserProfile, updateUserProfile, deleteUserAccount } from '../../interceptor/services';
+import { useAuth } from '../../hooks/useAuth';
 
 const UserDetails = () => {
   const navigate = useNavigate();
+  const { logout } = useAuth();
   const [currentStep, setCurrentStep] = useState(1);
   const totalSteps = 4;
 
@@ -168,6 +170,35 @@ const UserDetails = () => {
   const prevStep = () => {
     if (currentStep > 1) {
       setCurrentStep(prev => prev - 1);
+    }
+  };
+
+  // Handler for deleting account
+  const handleDeleteAccount = async () => {
+    setError('');
+    setInfoMessage('');
+
+    const isConfirmed = window.confirm(
+      "Are you sure you want to delete your account? This action is irreversible and all your data will be lost."
+    );
+
+    if (isConfirmed) {
+      setIsLoading(true);
+      try {
+        const response = await deleteUserAccount();
+        if (response.success) {
+          setInfoMessage(response.message || "Account deleted successfully. Logging you out...");
+          logout(); // Call logout from useAuth hook
+          // No need to navigate here, useAuth's logout already handles navigation to /login
+        } else {
+          setError(response.message || "Failed to delete account. Please try again.");
+        }
+      } catch (err) {
+        console.error('Error deleting account:', err);
+        setError("An unexpected error occurred while deleting your account. Please try again.");
+      } finally {
+        setIsLoading(false);
+      }
     }
   };
 
@@ -480,6 +511,25 @@ const UserDetails = () => {
                   {isLoading ? (currentStep === totalSteps ? 'Saving Profile...' : 'Processing...') : (currentStep === totalSteps ? 'Complete Profile & View Dashboard' : 'Next Step')}
                 </button>
               </div>
+
+              {/* Delete Account Section */}
+              {currentStep === totalSteps && (
+                <div className="mt-12 pt-8 border-t border-dashed border-gray-300">
+                  <h3 className="text-xl font-semibold text-red-600 mb-3">Danger Zone</h3>
+                  <p className="text-sm text-gray-600 mb-4">
+                    Deleting your account will remove all your personal information and data permanently. 
+                    This action cannot be undone.
+                  </p>
+                  <button
+                    type="button"
+                    onClick={handleDeleteAccount}
+                    disabled={isLoading}
+                    className="w-full md:w-auto px-6 py-3 rounded-lg bg-red-600 text-white font-medium hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-red-500 focus:ring-offset-2 disabled:opacity-50 transition ease-in-out duration-150"
+                  >
+                    {isLoading ? 'Deleting...' : 'Delete My Account'}
+                  </button>
+                </div>
+              )}
             </form>
           </div>
         </div>

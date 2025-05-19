@@ -216,3 +216,40 @@ export const updateUserProfile = async (profileData) => {
     };
   }
 };
+
+// New service for deleting user account
+export const deleteUserAccount = async () => {
+  try {
+    // The endpoint is 'users/account/delete/' and method is DELETE
+    // No request body is typically needed for a DELETE operation if using JWT for auth
+    const res = await interceptors.delete("users/account/delete/");
+    
+    // Backend should return 204 No Content on successful deletion
+    // Or it might return a JSON response like { success: true, message: "..." }
+    // We'll assume success if no error is thrown and status is 204, or if res.data.success is true
+    if (res.status === 204 || (res.data && res.data.success)) {
+      return {
+        success: true,
+        message: res.data?.message || "Account deleted successfully.", // Use backend message if available
+      };
+    } else {
+      // Handle cases where the status is not 204 but not an error either (e.g. unexpected JSON response)
+      throw new Error(res.data?.message || 'Failed to delete account due to unexpected response.');
+    }
+
+  } catch (error) {
+    console.error("Delete User Account error:", error.response?.data || error);
+    // Clear local storage on auth failure (e.g. token expired before delete)
+    if (error.response?.status === 401 || error.response?.status === 403) {
+      localStorage.removeItem("tokens");
+      localStorage.removeItem("user");
+      // Optionally redirect or prompt for re-login here, 
+      // but the calling component will likely handle navigation after deletion failure/success.
+    }
+    return {
+      success: false,
+      message: error.response?.data?.message || error.message || "Failed to delete account. Please try again.",
+      error: error.response?.data || error,
+    };
+  }
+};

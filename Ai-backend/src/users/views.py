@@ -379,3 +379,40 @@ class ConfirmPasswordResetView(APIView):
             'message': 'Password reset failed.',
             'errors': serializer.errors
         }, status=status.HTTP_400_BAD_REQUEST)
+
+class DeleteUserAccountView(APIView):
+    permission_classes = [IsAuthenticated]
+
+    def delete(self, request):
+        user_to_delete = request.user
+
+        try:
+            # Attempt to delete the associated UserProfile first (if it exists)
+            # This is good practice to avoid issues if UserProfile has restrictive delete policies
+            # or signals that need to fire before the User is deleted.
+            user_profile = UserProfile.objects.filter(user=user_to_delete).first()
+            if user_profile:
+                user_profile.delete()
+                print(f"UserProfile for {user_to_delete.email} deleted.")
+            
+            # Now delete the User object
+            user_to_delete.delete()
+            print(f"User {user_to_delete.email} deleted successfully.")
+            
+            return Response({"success": True, "message": "Account deleted successfully."}, status=status.HTTP_204_NO_CONTENT)
+        
+        except UserProfile.DoesNotExist:
+            # If UserProfile does not exist, we can proceed to delete the user
+            # This block might be redundant if .first() is used, as it won't raise DoesNotExist
+            print(f"No UserProfile found for {user_to_delete.email}, proceeding to delete user.")
+            user_to_delete.delete()
+            print(f"User {user_to_delete.email} deleted successfully (no profile was found).")
+            return Response({"success": True, "message": "Account deleted successfully (no profile was found)."}, status=status.HTTP_204_NO_CONTENT)
+            
+        except Exception as e:
+            print(f"Error deleting account for {user_to_delete.email}: {str(e)}")
+            return Response({
+                "success": False,
+                "message": "An error occurred while deleting your account.",
+                "error": str(e)
+            }, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
