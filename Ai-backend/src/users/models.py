@@ -45,6 +45,9 @@ class UserManager(BaseUserManager):
         user = None
         email = google_data.get('email')
         
+        if not email:
+            raise ValueError("Email is required from Google data")
+        
         # Try to find user by google_id first
         if google_data.get('sub'):
             user = self.filter(google_id=google_data['sub']).first()
@@ -58,6 +61,9 @@ class UserManager(BaseUserManager):
             user.google_id = google_data.get('sub')
             user.name = google_data.get('name', user.name)
             user.profile_picture_url = google_data.get('picture', user.profile_picture_url)
+            # Ensure Google users are active and verified
+            user.is_active = True
+            user.is_verified = True
             user.save()
         else:
             # Create new user from Google data - they are active and verified immediately
@@ -70,6 +76,8 @@ class UserManager(BaseUserManager):
                 is_active=True, # Google users are active by default
                 is_verified=True # Google users are verified by default
             )
+            # Explicitly save to ensure the user is persisted
+            user.save()
         
         return user
 

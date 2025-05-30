@@ -205,17 +205,25 @@ class UserProfileView(APIView):
 
 class GoogleLoginView(APIView):
     def post(self, request):
-        serializer = GoogleAuthSerializer(data=request.data)
-        if serializer.is_valid():
-            token = serializer.validated_data['token']
-            try:
-                # Verify the Google token
-                if not settings.GOOGLE_OAUTH2_CLIENT_ID:
-                    return Response({
-                        'success': False,
-                        'message': 'Google authentication is not configured properly.'
-                    }, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+        try:
+            serializer = GoogleAuthSerializer(data=request.data)
+            if not serializer.is_valid():
+                return Response({
+                    'success': False,
+                    'message': 'Invalid request data',
+                    'errors': serializer.errors
+                }, status=status.HTTP_400_BAD_REQUEST)
 
+            token = serializer.validated_data['token']
+            
+            # Verify the Google token
+            if not settings.GOOGLE_OAUTH2_CLIENT_ID:
+                return Response({
+                    'success': False,
+                    'message': 'Google authentication is not configured properly.'
+                }, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+
+            try:
                 idinfo = id_token.verify_oauth2_token(
                     token, 
                     requests.Request(), 
@@ -225,8 +233,16 @@ class GoogleLoginView(APIView):
                 if idinfo['iss'] not in ['accounts.google.com', 'https://accounts.google.com']:
                     raise ValueError('Invalid token issuer.')
 
+                print(f"Google auth successful for email: {idinfo.get('email')}")
+
                 # Get or create user
                 user = User.objects.get_or_create_google_user(idinfo)
+                
+                # Ensure user is properly saved and active
+                if not user.is_active or not user.is_verified:
+                    user.is_active = True
+                    user.is_verified = True
+                    user.save()
                 
                 # Create profile if it doesn't exist
                 profile_data = get_or_create_profile(user)
@@ -252,11 +268,12 @@ class GoogleLoginView(APIView):
                 }, status=status.HTTP_200_OK)
 
             except ValueError as e:
+                print(f"Google token verification failed: {str(e)}")
                 return Response({
                     'success': False,
                     'message': 'Google authentication failed',
                     'error': str(e)
-                }, status=status.HTTP_400_BAD_REQUEST)
+                }, status=status.HTTP_401_UNAUTHORIZED)
             except Exception as e:
                 print(f"Google auth error: {str(e)}")
                 return Response({
@@ -265,11 +282,13 @@ class GoogleLoginView(APIView):
                     'error': str(e)
                 }, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
                 
-        return Response({
-            'success': False,
-            'message': 'Invalid request data',
-            'errors': serializer.errors
-        }, status=status.HTTP_400_BAD_REQUEST)
+        except Exception as e:
+            print(f"GoogleLoginView outer error: {str(e)}")
+            return Response({
+                'success': False,
+                'message': 'Authentication request failed',
+                'error': str(e)
+            }, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
 # You might want to customize the email content for password reset
 def send_password_reset_otp_email(user_email, otp):
