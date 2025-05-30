@@ -1,4 +1,8 @@
+import { useNavigate } from 'react-router-dom';
+
 const Pricing = () => {
+  const navigate = useNavigate();
+  
   return (
     <section id="pricing" className="py-12 sm:py-16 px-4 sm:px-6 lg:px-8 bg-white">
       <div className="max-w-7xl mx-auto">
@@ -25,7 +29,10 @@ const Pricing = () => {
               </ul>
             </div>
             <div className="p-4 bg-gray-50">
-              <button className="w-full py-2 px-4 border-2 border-primary-600 text-primary-600 rounded-full hover:bg-primary-50">
+              <button 
+                className="w-full py-2 px-4 border-2 border-primary-600 text-primary-600 rounded-full hover:bg-primary-50"
+                onClick={() => navigate('/login')}
+              >
                 Get Started
               </button>
             </div>
@@ -56,7 +63,10 @@ const Pricing = () => {
               </ul>
             </div>
             <div className="p-4 bg-gray-50">
-              <button className="w-full py-2 px-4 bg-primary-600 text-white rounded-full hover:bg-primary-700">
+              <button 
+                className="w-full py-2 px-4 bg-primary-600 text-white rounded-full hover:bg-primary-700"
+                onClick={() => navigate('/login')}
+              >
                 Get Started
               </button>
             </div>
@@ -86,7 +96,10 @@ const Pricing = () => {
               </ul>
             </div>
             <div className="p-4 bg-gray-50">
-              <button className="w-full py-2 px-4 border-2 border-primary-600 text-primary-600 rounded-full hover:bg-primary-50">
+              <button 
+                className="w-full py-2 px-4 border-2 border-primary-600 text-primary-600 rounded-full hover:bg-primary-50"
+                onClick={() => navigate('/login')}
+              >
                 Get Started
               </button>
             </div>
