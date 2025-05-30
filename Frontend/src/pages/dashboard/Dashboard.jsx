@@ -3,6 +3,105 @@ import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '../../hooks/useAuth';
 import { getUserProfile } from '../../interceptor/services';
 
+// 3D Animated AI Icon Component (Jarvis-style)
+const JarvisAIIcon = ({ size = 6, animate = true }) => {
+  const sizeClasses = {
+    4: 'w-4 h-4',
+    6: 'w-6 h-6', 
+    8: 'w-8 h-8',
+    10: 'w-10 h-10',
+    12: 'w-12 h-12'
+  };
+  
+  return (
+    <div className={`relative ${sizeClasses[size]} flex items-center justify-center`}>
+      <svg
+        className={`w-full h-full ${animate ? 'animate-pulse' : ''}`}
+        viewBox="0 0 100 100"
+        style={{
+          filter: 'drop-shadow(0 0 8px rgba(168, 85, 247, 0.6))',
+        }}
+      >
+        {/* Outer rotating ring */}
+        <circle
+          cx="50"
+          cy="50"
+          r="45"
+          fill="none"
+          stroke="url(#gradient1)"
+          strokeWidth="2"
+          strokeDasharray="10,5"
+          className={animate ? 'animate-spin' : ''}
+          style={{ transformOrigin: '50px 50px', animationDuration: '3s' }}
+        />
+        
+        {/* Middle ring */}
+        <circle
+          cx="50"
+          cy="50"
+          r="35"
+          fill="none"
+          stroke="url(#gradient2)"
+          strokeWidth="1.5"
+          strokeDasharray="8,3"
+          className={animate ? 'animate-spin' : ''}
+          style={{ transformOrigin: '50px 50px', animationDuration: '2s', animationDirection: 'reverse' }}
+        />
+        
+        {/* Inner core */}
+        <circle
+          cx="50"
+          cy="50"
+          r="20"
+          fill="url(#coreGradient)"
+          className={animate ? 'animate-pulse' : ''}
+        />
+        
+        {/* Central neural pattern */}
+        <g className={animate ? 'animate-pulse' : ''} style={{ animationDuration: '1.5s' }}>
+          <path
+            d="M35 50 L50 35 L65 50 L50 65 Z"
+            fill="none"
+            stroke="rgba(255,255,255,0.9)"
+            strokeWidth="1.5"
+          />
+          <circle cx="50" cy="50" r="3" fill="white" />
+          <circle cx="42" cy="42" r="1.5" fill="rgba(255,255,255,0.7)" />
+          <circle cx="58" cy="42" r="1.5" fill="rgba(255,255,255,0.7)" />
+          <circle cx="42" cy="58" r="1.5" fill="rgba(255,255,255,0.7)" />
+          <circle cx="58" cy="58" r="1.5" fill="rgba(255,255,255,0.7)" />
+        </g>
+        
+        {/* Energy particles */}
+        <g className={animate ? 'animate-ping' : ''} style={{ animationDuration: '2s' }}>
+          <circle cx="25" cy="30" r="1" fill="rgba(168, 85, 247, 0.9)" />
+          <circle cx="75" cy="25" r="1" fill="rgba(168, 85, 247, 0.9)" />
+          <circle cx="80" cy="70" r="1" fill="rgba(168, 85, 247, 0.9)" />
+          <circle cx="20" cy="75" r="1" fill="rgba(168, 85, 247, 0.9)" />
+        </g>
+        
+        {/* Gradients */}
+        <defs>
+          <linearGradient id="gradient1" x1="0%" y1="0%" x2="100%" y2="100%">
+            <stop offset="0%" stopColor="#a855f7" />
+            <stop offset="50%" stopColor="#6366f1" />
+            <stop offset="100%" stopColor="#8b5cf6" />
+          </linearGradient>
+          <linearGradient id="gradient2" x1="0%" y1="0%" x2="100%" y2="100%">
+            <stop offset="0%" stopColor="#6366f1" />
+            <stop offset="100%" stopColor="#a855f7" />
+          </linearGradient>
+          <radialGradient id="coreGradient" cx="50%" cy="50%" r="50%">
+            <stop offset="0%" stopColor="rgba(168, 85, 247, 0.9)" />
+            <stop offset="70%" stopColor="rgba(99, 102, 241, 0.7)" />
+            <stop offset="100%" stopColor="rgba(139, 92, 246, 0.5)" />
+          </radialGradient>
+        </defs>
+      </svg>
+    </div>
+  );
+};
+
 const Dashboard = () => {
   const navigate = useNavigate();
   const { currentUser, logout, isLoading: authLoading } = useAuth();
@@ -475,12 +574,23 @@ const Dashboard = () => {
             <div className="flex items-center space-x-4">
               <button 
                 onClick={() => setShowAIChat(true)}
-                className="hidden sm:flex items-center space-x-2 bg-gradient-to-r from-purple-500 to-indigo-600 text-white px-4 py-2 rounded-xl font-medium hover:shadow-lg transition-all duration-300 hover:-translate-y-0.5"
+                className="hidden sm:flex items-center space-x-3 bg-gradient-to-r from-purple-500 to-indigo-600 text-white px-6 py-3 rounded-2xl font-medium hover:shadow-xl transition-all duration-300 hover:-translate-y-1 hover:scale-105 relative overflow-hidden group"
               >
-                <div className="w-6 h-6 bg-white/20 rounded-lg flex items-center justify-center">
-                  <span className="text-sm">🤖</span>
+                {/* Background glow effect */}
+                <div className="absolute inset-0 bg-gradient-to-r from-purple-400 to-indigo-500 opacity-0 group-hover:opacity-20 transition-opacity duration-300 rounded-2xl"></div>
+                
+                {/* Jarvis AI Icon */}
+                <div className="relative z-10">
+                  <JarvisAIIcon size={6} animate={true} />
                 </div>
-                <span>Smart AI</span>
+                
+                <div className="relative z-10 flex flex-col">
+                  <span className="font-bold text-sm">JARVIS AI</span>
+                  <span className="text-xs opacity-90">Health Assistant</span>
+                </div>
+                
+                {/* Pulse effect */}
+                <div className="absolute -inset-1 bg-gradient-to-r from-purple-500 to-indigo-600 rounded-2xl blur opacity-30 group-hover:opacity-50 transition-opacity duration-300 animate-pulse"></div>
               </button>
               
               {/* Desktop Profile Quick Access */}
@@ -1635,26 +1745,40 @@ const Dashboard = () => {
             <div className="flex items-center justify-between p-6 border-b border-gray-200/50 bg-gradient-to-r from-purple-50/50 to-indigo-50/50 rounded-t-3xl">
               <div className="flex items-center space-x-4">
                 <div className="relative">
-                  <div className="w-12 h-12 bg-gradient-to-br from-purple-500 via-indigo-600 to-purple-700 rounded-2xl flex items-center justify-center shadow-lg">
-                    <span className="text-2xl">🤖</span>
+                  <div className="w-14 h-14 bg-gradient-to-br from-purple-500 via-indigo-600 to-purple-700 rounded-2xl flex items-center justify-center shadow-xl border-2 border-white/20">
+                    <JarvisAIIcon size={8} animate={true} />
                   </div>
-                  <div className="absolute -top-1 -right-1 w-4 h-4 bg-green-500 rounded-full border-2 border-white animate-pulse"></div>
+                  <div className="absolute -top-1 -right-1 w-5 h-5 bg-green-500 rounded-full border-2 border-white animate-pulse shadow-lg"></div>
+                  {/* Neural activity indicator */}
+                  <div className="absolute -bottom-1 -left-1 w-3 h-3 bg-blue-400 rounded-full animate-ping"></div>
                 </div>
                 <div>
-                  <h3 className="text-xl font-bold text-gray-900">WellZO AI</h3>
-                  <p className="text-sm text-gray-600 font-medium">Personal Health Intelligence</p>
+                  <h3 className="text-xl font-bold text-gray-900 flex items-center space-x-2">
+                    <span>Helix</span>
+                    <span className="text-sm bg-gradient-to-r from-purple-500 to-indigo-600 text-white px-2 py-1 rounded-full font-medium">
+                      v2.0
+                    </span>
+                  </h3>
+                  <p className="text-sm text-gray-600 font-medium">Personal Health Intelligence System</p>
                 </div>
               </div>
               <div className="flex items-center space-x-3">
-                <div className="hidden sm:flex items-center space-x-2 bg-green-100 text-green-700 px-3 py-1 rounded-full text-xs font-semibold">
+                <div className="hidden sm:flex items-center space-x-2 bg-green-100 text-green-700 px-4 py-2 rounded-full text-xs font-semibold border border-green-200">
                   <div className="w-2 h-2 bg-green-500 rounded-full animate-pulse"></div>
-                  Online
+                  <span>Neural Networks Active</span>
                 </div>
                 <button 
                   onClick={() => setShowAIChat(false)}
-                  className="p-2 rounded-xl hover:bg-gray-100 transition-all duration-200 group"
+                  className="group relative p-3 rounded-xl hover:bg-red-50 transition-all duration-200 border border-gray-200 hover:border-red-200"
                 >
-                  <i className="fas fa-times text-gray-500 group-hover:text-gray-700 text-lg"></i>
+                  <div className="absolute inset-0 bg-red-500 opacity-0 group-hover:opacity-10 rounded-xl transition-opacity"></div>
+                  <i className="fas fa-times text-gray-500 group-hover:text-red-600 text-lg transition-colors relative z-10"></i>
+                  
+                  {/* Tooltip */}
+                  <div className="absolute -top-12 -right-2 bg-gray-900 text-white text-xs px-3 py-1 rounded-lg opacity-0 group-hover:opacity-100 transition-opacity duration-200 whitespace-nowrap">
+                    Close JARVIS
+                    <div className="absolute top-full left-1/2 transform -translate-x-1/2 w-0 h-0 border-l-4 border-r-4 border-t-4 border-transparent border-t-gray-900"></div>
+                  </div>
                 </button>
               </div>
             </div>
@@ -1665,12 +1789,12 @@ const Dashboard = () => {
                 <div key={index} className={`flex ${message.role === 'user' ? 'justify-end' : 'justify-start'}`}>
                   {message.role === 'assistant' && (
                     <div className="flex items-start space-x-3 max-w-[80%]">
-                      <div className="w-8 h-8 bg-gradient-to-br from-purple-500 to-indigo-600 rounded-xl flex items-center justify-center shadow-md flex-shrink-0 mt-1">
-                        <span className="text-white text-sm">🤖</span>
+                      <div className="w-8 h-8 bg-gradient-to-br from-purple-500 to-indigo-600 rounded-xl flex items-center justify-center shadow-lg flex-shrink-0 mt-1 border border-purple-200">
+                        <JarvisAIIcon size={4} animate={false} />
                       </div>
                       <div className="flex-1">
                         <div className="flex items-center space-x-2 mb-2">
-                          <span className="text-sm font-semibold text-gray-900">WellZO AI</span>
+                          <span className="text-sm font-semibold text-gray-900">Helix</span>
                           <span className="text-xs text-gray-500 font-medium">
                             {message.timestamp.toLocaleTimeString()}
                           </span>
@@ -1709,13 +1833,13 @@ const Dashboard = () => {
               {isAITyping && (
                 <div className="flex justify-start">
                   <div className="flex items-start space-x-3 max-w-[80%]">
-                    <div className="w-8 h-8 bg-gradient-to-br from-purple-500 to-indigo-600 rounded-xl flex items-center justify-center shadow-md flex-shrink-0">
-                      <span className="text-white text-sm">🤖</span>
+                    <div className="w-8 h-8 bg-gradient-to-br from-purple-500 to-indigo-600 rounded-xl flex items-center justify-center shadow-lg flex-shrink-0 border border-purple-200">
+                      <JarvisAIIcon size={4} animate={true} />
                     </div>
                     <div className="flex-1">
                       <div className="flex items-center space-x-2 mb-2">
-                        <span className="text-sm font-semibold text-gray-900">WellZO AI</span>
-                        <span className="text-xs text-gray-500 font-medium">thinking...</span>
+                        <span className="text-sm font-semibold text-gray-900">JARVIS AI</span>
+                        <span className="text-xs text-gray-500 font-medium">processing neural patterns...</span>
                       </div>
                       <div className="bg-white/80 backdrop-blur-sm rounded-2xl rounded-tl-lg p-4 shadow-sm border border-gray-200/50">
                         <div className="flex items-center space-x-2">
@@ -1800,10 +1924,10 @@ const Dashboard = () => {
                 <span>Press Enter to send, Shift + Enter for new line</span>
                 <div className="flex items-center space-x-4">
                   <span className="flex items-center space-x-1">
-                    <div className="w-2 h-2 bg-green-500 rounded-full"></div>
-                    <span>AI Online</span>
+                    <div className="w-2 h-2 bg-green-500 rounded-full animate-pulse"></div>
+                    <span>Neural Networks Online</span>
                   </span>
-                  <span>Powered by WellZO Intelligence</span>
+                  <span>Powered by JARVIS Intelligence</span>
                 </div>
               </div>
             </div>
