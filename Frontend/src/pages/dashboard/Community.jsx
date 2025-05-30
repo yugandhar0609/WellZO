@@ -89,11 +89,18 @@ const Community = () => {
       <main className="lg:ml-64 min-h-screen pb-16 lg:pb-0">
         {/* Top Navigation */}
         <header className="bg-white shadow-sm">
-          <div className="flex justify-between items-center px-6 py-4">
-            <div className="flex items-center space-x-4">
+          <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center px-4 sm:px-6 py-4 space-y-4 sm:space-y-0">
+            <div className="flex items-center space-x-4 w-full sm:w-auto">
               <button className="lg:hidden">
                 <i className="fas fa-bars text-gray-600"></i>
               </button>
+              <Link 
+                to="/dashboard" 
+                className="flex items-center space-x-2 px-3 py-2 rounded-xl bg-emerald-50 hover:bg-emerald-100 text-emerald-600 transition-colors"
+              >
+                <i className="fas fa-arrow-left"></i>
+                <span className="hidden sm:inline">Back to Dashboard</span>
+              </Link>
               <h2 className="text-xl font-semibold">Community</h2>
             </div>
             <div className="flex items-center space-x-4">

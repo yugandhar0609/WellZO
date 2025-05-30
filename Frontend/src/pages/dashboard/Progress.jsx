@@ -115,6 +115,13 @@ const Progress = () => {
               <button className="lg:hidden">
                 <i className="fas fa-bars text-gray-600"></i>
               </button>
+              <Link 
+                to="/dashboard" 
+                className="flex items-center space-x-2 px-3 py-2 rounded-xl bg-emerald-50 hover:bg-emerald-100 text-emerald-600 transition-colors"
+              >
+                <i className="fas fa-arrow-left"></i>
+                <span className="hidden sm:inline">Back to Dashboard</span>
+              </Link>
               <h2 className="text-xl font-semibold">Progress Tracking</h2>
             </div>
             <div className="flex items-center space-x-4">
