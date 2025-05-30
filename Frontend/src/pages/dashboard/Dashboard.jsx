@@ -254,69 +254,11 @@ const Dashboard = () => {
         </div>
       )}
 
-      {/* Desktop Sidebar */}
-      <aside className="fixed left-0 top-0 h-screen w-72 bg-white shadow-lg hidden lg:block z-30">
-        <div className="p-6 border-b border-gray-200">
-          <div className="flex items-center space-x-3">
-            <div className="w-12 h-12 bg-gradient-to-r from-emerald-500 to-teal-600 rounded-xl flex items-center justify-center">
-              <span className="text-white font-bold text-xl">W</span>
-            </div>
-            <h1 className="text-2xl font-bold text-emerald-600">WellZO</h1>
-          </div>
-        </div>
-        <nav className="p-4">
-          <div className="space-y-2">
-            <Link to="/dashboard" className="flex items-center space-x-3 p-4 rounded-xl bg-emerald-500 text-white shadow-md">
-              <i className="fas fa-home"></i>
-              <span className="font-medium">Dashboard</span>
-            </Link>
-            <Link to="/health-tracking" className="flex items-center space-x-3 p-4 rounded-xl hover:bg-gray-100 text-gray-700 transition-colors">
-              <i className="fas fa-chart-line"></i>
-              <span>Health Tracking</span>
-            </Link>
-            <Link to="/community" className="flex items-center space-x-3 p-4 rounded-xl hover:bg-gray-100 text-gray-700 transition-colors">
-              <i className="fas fa-users"></i>
-              <span>Community</span>
-            </Link>
-            <Link to="/nutrition" className="flex items-center space-x-3 p-4 rounded-xl hover:bg-gray-100 text-gray-700 transition-colors">
-              <i className="fas fa-apple-alt"></i>
-              <span>Nutrition</span>
-            </Link>
-            <Link to="/workouts" className="flex items-center space-x-3 p-4 rounded-xl hover:bg-gray-100 text-gray-700 transition-colors">
-              <i className="fas fa-dumbbell"></i>
-              <span>Workouts</span>
-            </Link>
-            <Link to="/wellness" className="flex items-center space-x-3 p-4 rounded-xl hover:bg-gray-100 text-gray-700 transition-colors">
-              <i className="fas fa-spa"></i>
-              <span>Wellness</span>
-            </Link>
-            <Link to="/marketplace" className="flex items-center space-x-3 p-4 rounded-xl hover:bg-gray-100 text-gray-700 transition-colors">
-              <i className="fas fa-store"></i>
-              <span>Marketplace</span>
-            </Link>
-          </div>
-          
-          <div className="mt-8 pt-6 border-t border-gray-200">
-            <h4 className="text-xs font-semibold text-gray-500 mb-4 px-4">AI ASSISTANTS</h4>
-            <div className="space-y-2">
-              <Link to="/nutrition-ai" className="flex items-center space-x-3 p-4 rounded-xl hover:bg-gray-100 text-gray-700 transition-colors">
-                <i className="fas fa-robot text-emerald-600"></i>
-                <span>Nutrition AI</span>
-              </Link>
-              <Link to="/fitness-ai" className="flex items-center space-x-3 p-4 rounded-xl hover:bg-gray-100 text-gray-700 transition-colors">
-                <i className="fas fa-brain text-purple-600"></i>
-                <span>Fitness AI</span>
-              </Link>
-            </div>
-          </div>
-        </nav>
-      </aside>
-
-      {/* Main Content */}
-      <main className="lg:ml-72 lg:mr-80 min-h-screen pb-20 lg:pb-0">
+      {/* Main Content - Full Width */}
+      <main className="min-h-screen pb-20 lg:pb-4">
         {/* Top Header */}
         <header className="bg-white shadow-sm border-b border-gray-200 sticky top-0 z-20">
-          <div className="flex items-center justify-between px-4 lg:px-8 py-4">
+          <div className="flex items-center justify-between px-4 lg:px-8 py-4 max-w-7xl mx-auto">
             <div className="flex items-center space-x-4">
               <button 
                 onClick={() => setShowSidebar(true)}
@@ -324,18 +266,23 @@ const Dashboard = () => {
               >
                 <i className="fas fa-bars text-gray-600"></i>
               </button>
-              <div>
-                <h2 className="text-xl lg:text-2xl font-bold text-gray-900">
-                  {getGreeting()}, {userName.split(' ')[0]}!
-                </h2>
-                <p className="text-sm text-gray-500">
-                  {currentTime.toLocaleDateString('en-US', { 
-                    weekday: 'long', 
-                    year: 'numeric', 
-                    month: 'long', 
-                    day: 'numeric' 
-                  })}
-                </p>
+              <div className="flex items-center space-x-3">
+                <div className="w-10 h-10 bg-gradient-to-r from-emerald-500 to-teal-600 rounded-xl flex items-center justify-center lg:block hidden">
+                  <span className="text-white font-bold text-lg">W</span>
+                </div>
+                <div>
+                  <h2 className="text-xl lg:text-2xl font-bold text-gray-900">
+                    {getGreeting()}, {userName.split(' ')[0]}!
+                  </h2>
+                  <p className="text-sm text-gray-500">
+                    {currentTime.toLocaleDateString('en-US', { 
+                      weekday: 'long', 
+                      year: 'numeric', 
+                      month: 'long', 
+                      day: 'numeric' 
+                    })}
+                  </p>
+                </div>
               </div>
             </div>
             <div className="flex items-center space-x-4">
@@ -359,14 +306,78 @@ const Dashboard = () => {
                 />
                 <div className="absolute -top-1 -right-1 w-4 h-4 bg-green-500 rounded-full border-2 border-white"></div>
               </button>
+              {/* Desktop Profile Quick Access */}
+              <div className="hidden lg:flex items-center space-x-3">
+                <div className="relative">
+                  <button 
+                    onClick={() => setShowProfileMenu(!showProfileMenu)}
+                    className="flex items-center space-x-3 p-2 rounded-xl hover:bg-gray-50 transition-colors"
+                  >
+                    <img
+                      src={userAvatar}
+                      alt="Profile"
+                      className="w-10 h-10 rounded-full border-2 border-emerald-500 object-cover"
+                    />
+                    <div className="text-left">
+                      <p className="text-sm font-medium text-gray-900">{userName.split(' ')[0]}</p>
+                      <p className="text-xs text-gray-500">Premium</p>
+                    </div>
+                    <i className="fas fa-chevron-down text-gray-400 text-sm"></i>
+                  </button>
+                  
+                  {/* Desktop Profile Dropdown */}
+                  {showProfileMenu && (
+                    <div className="absolute right-0 top-full mt-2 w-64 bg-white rounded-xl shadow-lg border border-gray-200 z-50">
+                      <div className="p-4 border-b border-gray-100">
+                        <div className="flex items-center space-x-3">
+                          <img
+                            src={userAvatar}
+                            alt="Profile"
+                            className="w-12 h-12 rounded-full border-2 border-emerald-500 object-cover"
+                          />
+                          <div>
+                            <h3 className="font-semibold text-gray-900">{userName}</h3>
+                            <p className="text-sm text-gray-500">Premium Member</p>
+                          </div>
+                        </div>
+                      </div>
+                      <div className="p-2">
+                        <Link 
+                          to="/profile-dashboard" 
+                          className="flex items-center space-x-3 p-3 rounded-lg hover:bg-gray-50 text-gray-700 transition-colors"
+                          onClick={() => setShowProfileMenu(false)}
+                        >
+                          <i className="fas fa-user text-gray-400"></i>
+                          <span>View Profile</span>
+                        </Link>
+                        <Link 
+                          to="/user-details" 
+                          className="flex items-center space-x-3 p-3 rounded-lg hover:bg-gray-50 text-gray-700 transition-colors"
+                          onClick={() => setShowProfileMenu(false)}
+                        >
+                          <i className="fas fa-user-edit text-gray-400"></i>
+                          <span>Edit Profile</span>
+                        </Link>
+                        <button 
+                          onClick={handleLogout}
+                          className="w-full flex items-center space-x-3 p-3 rounded-lg hover:bg-red-50 text-red-600 transition-colors"
+                        >
+                          <i className="fas fa-sign-out-alt"></i>
+                          <span>Logout</span>
+                        </button>
+                      </div>
+                    </div>
+                  )}
+                </div>
+              </div>
             </div>
           </div>
         </header>
 
         {/* Dashboard Content */}
-        <div className="p-4 lg:p-8 space-y-8">
+        <div className="p-4 lg:p-8 space-y-6 lg:space-y-8 max-w-7xl mx-auto">
           {/* Health Metrics Grid */}
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 lg:gap-6">
             {healthMetrics.map((metric, index) => (
               <div key={index} className="bg-white rounded-2xl shadow-md p-6 hover:shadow-lg transition-shadow">
                 <div className="flex items-center justify-between mb-4">
@@ -397,12 +408,12 @@ const Dashboard = () => {
             ))}
           </div>
 
-          {/* Quick Actions & Water Intake */}
+          {/* Quick Actions & Water Intake Row */}
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
             {/* Quick Actions */}
             <div className="lg:col-span-2 bg-white rounded-2xl shadow-md p-6">
               <h3 className="text-lg font-semibold mb-6 text-gray-900">Quick Actions</h3>
-              <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
+              <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
                 <button className="flex flex-col items-center p-4 rounded-xl bg-emerald-50 hover:bg-emerald-100 transition-colors group">
                   <i className="fas fa-plus text-emerald-600 text-xl mb-2 group-hover:scale-110 transition-transform"></i>
                   <span className="text-sm font-medium text-emerald-700">Log Meal</span>
@@ -451,8 +462,8 @@ const Dashboard = () => {
             </div>
           </div>
 
-          {/* Today's Schedule & Achievements */}
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+          {/* Main Content Row - Schedule, Achievements, and Profile Info */}
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
             {/* Today's Schedule */}
             <div className="bg-white rounded-2xl shadow-md p-6">
               <h3 className="text-lg font-semibold mb-6 text-gray-900">Today's Schedule</h3>
@@ -498,9 +509,79 @@ const Dashboard = () => {
                 ))}
               </div>
             </div>
+
+            {/* Profile Stats & Notifications */}
+            <div className="md:col-span-2 lg:col-span-1 space-y-6">
+              {/* Profile Stats Card */}
+              <div className="bg-white rounded-2xl shadow-md p-6">
+                <div className="flex items-center space-x-4 mb-6">
+                  <div className="relative">
+                    <img
+                      src={userAvatar}
+                      alt="Profile"
+                      className="w-14 h-14 rounded-full border-2 border-emerald-500 object-cover"
+                    />
+                    <div className="absolute -bottom-1 -right-1 w-5 h-5 bg-green-500 rounded-full border-2 border-white"></div>
+                  </div>
+                  <div>
+                    <h3 className="font-semibold text-lg text-gray-900">{userName}</h3>
+                    <p className="text-sm text-gray-500">Premium Member</p>
+                    <div className="flex items-center mt-1">
+                      <div className="flex text-yellow-400">
+                        {[...Array(5)].map((_, i) => (
+                          <i key={i} className="fas fa-star text-xs"></i>
+                        ))}
+                      </div>
+                      <span className="text-xs text-gray-500 ml-2">Level 12</span>
+                    </div>
+                  </div>
+                </div>
+
+                <div className="space-y-3">
+                  <div className="flex justify-between items-center">
+                    <span className="text-sm text-gray-600">Streak</span>
+                    <span className="font-semibold text-emerald-600">7 days</span>
+                  </div>
+                  <div className="flex justify-between items-center">
+                    <span className="text-sm text-gray-600">Points</span>
+                    <span className="font-semibold text-purple-600">2,847</span>
+                  </div>
+                  <div className="flex justify-between items-center">
+                    <span className="text-sm text-gray-600">Rank</span>
+                    <span className="font-semibold text-orange-600">#23</span>
+                  </div>
+                </div>
+              </div>
+
+              {/* Recent Notifications */}
+              <div className="bg-white rounded-2xl shadow-md p-6">
+                <h4 className="text-lg font-semibold mb-4 text-gray-900">Notifications</h4>
+                <div className="space-y-3">
+                  <div className="flex items-start space-x-3 p-3 bg-emerald-50 rounded-xl">
+                    <div className="w-8 h-8 bg-emerald-500 rounded-full flex items-center justify-center flex-shrink-0">
+                      <i className="fas fa-trophy text-white text-sm"></i>
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <p className="text-sm font-medium text-gray-900">New Achievement!</p>
+                      <p className="text-xs text-gray-500">Weekly goal completed</p>
+                    </div>
+                  </div>
+                  
+                  <div className="flex items-start space-x-3 p-3 bg-blue-50 rounded-xl">
+                    <div className="w-8 h-8 bg-blue-500 rounded-full flex items-center justify-center flex-shrink-0">
+                      <i className="fas fa-bell text-white text-sm"></i>
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <p className="text-sm font-medium text-gray-900">Workout Reminder</p>
+                      <p className="text-xs text-gray-500">HIIT session in 30 min</p>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
           </div>
 
-          {/* Health Insights */}
+          {/* Health Insights - Full Width */}
           <div className="bg-gradient-to-r from-emerald-500 to-teal-600 rounded-2xl shadow-md p-6 text-white">
             <div className="flex items-center justify-between mb-6">
               <h3 className="text-lg font-semibold">AI Health Insights</h3>
@@ -523,144 +604,6 @@ const Dashboard = () => {
           </div>
         </div>
       </main>
-
-      {/* Right Sidebar - Profile & Notifications */}
-      <aside className="fixed right-0 top-0 h-screen w-80 bg-white shadow-lg hidden lg:block overflow-y-auto z-30">
-        <div className="p-6 border-b border-gray-200">
-          <div className="flex items-center space-x-4">
-            <div className="relative">
-              <img
-                src={userAvatar}
-                alt="Profile"
-                className="w-14 h-14 rounded-full border-2 border-emerald-500 object-cover"
-              />
-              <div className="absolute -bottom-1 -right-1 w-5 h-5 bg-green-500 rounded-full border-2 border-white"></div>
-            </div>
-            <div>
-              <h3 className="font-semibold text-lg text-gray-900">{userName}</h3>
-              <p className="text-sm text-gray-500">Premium Member</p>
-              <div className="flex items-center mt-1">
-                <div className="flex text-yellow-400">
-                  {[...Array(5)].map((_, i) => (
-                    <i key={i} className="fas fa-star text-xs"></i>
-                  ))}
-                </div>
-                <span className="text-xs text-gray-500 ml-2">Level 12</span>
-              </div>
-            </div>
-          </div>
-        </div>
-
-        {/* Profile Stats */}
-        <div className="p-6 border-b border-gray-200">
-          <h4 className="text-sm font-semibold text-gray-500 mb-4">PROFILE INFO</h4>
-          <div className="space-y-3">
-            {profileData?.age && (
-              <div className="flex justify-between items-center">
-                <span className="text-sm text-gray-600">Age</span>
-                <span className="font-semibold text-gray-900">{profileData.age} years</span>
-              </div>
-            )}
-            {profileData?.city && (
-              <div className="flex justify-between items-center">
-                <span className="text-sm text-gray-600">Location</span>
-                <span className="font-semibold text-gray-900">{profileData.city}</span>
-              </div>
-            )}
-            <div className="flex justify-between items-center">
-              <span className="text-sm text-gray-600">Member Since</span>
-              <span className="font-semibold text-gray-900">
-                {new Date(currentUser.created_at || Date.now()).getFullYear()}
-              </span>
-            </div>
-          </div>
-        </div>
-
-        {/* Quick Stats */}
-        <div className="p-6 border-b border-gray-200">
-          <h4 className="text-sm font-semibold text-gray-500 mb-4">QUICK STATS</h4>
-          <div className="space-y-3">
-            <div className="flex justify-between items-center">
-              <span className="text-sm text-gray-600">Streak</span>
-              <span className="font-semibold text-emerald-600">7 days</span>
-            </div>
-            <div className="flex justify-between items-center">
-              <span className="text-sm text-gray-600">Points</span>
-              <span className="font-semibold text-purple-600">2,847</span>
-            </div>
-            <div className="flex justify-between items-center">
-              <span className="text-sm text-gray-600">Rank</span>
-              <span className="font-semibold text-orange-600">#23</span>
-            </div>
-          </div>
-        </div>
-
-        {/* Notifications */}
-        <div className="p-6">
-          <h4 className="text-sm font-semibold text-gray-500 mb-4">NOTIFICATIONS</h4>
-          <div className="space-y-4">
-            <div className="flex items-start space-x-3 p-3 bg-emerald-50 rounded-xl">
-              <div className="w-8 h-8 bg-emerald-500 rounded-full flex items-center justify-center flex-shrink-0">
-                <i className="fas fa-trophy text-white text-sm"></i>
-              </div>
-              <div className="flex-1 min-w-0">
-                <p className="text-sm font-medium text-gray-900">New Achievement!</p>
-                <p className="text-xs text-gray-500">You've completed your weekly goal</p>
-                <span className="text-xs text-gray-400">2 minutes ago</span>
-              </div>
-            </div>
-            
-            <div className="flex items-start space-x-3 p-3 bg-blue-50 rounded-xl">
-              <div className="w-8 h-8 bg-blue-500 rounded-full flex items-center justify-center flex-shrink-0">
-                <i className="fas fa-bell text-white text-sm"></i>
-              </div>
-              <div className="flex-1 min-w-0">
-                <p className="text-sm font-medium text-gray-900">Workout Reminder</p>
-                <p className="text-xs text-gray-500">HIIT session in 30 minutes</p>
-                <span className="text-xs text-gray-400">1 hour ago</span>
-              </div>
-            </div>
-
-            <div className="flex items-start space-x-3 p-3 bg-purple-50 rounded-xl">
-              <div className="w-8 h-8 bg-purple-500 rounded-full flex items-center justify-center flex-shrink-0">
-                <i className="fas fa-heart text-white text-sm"></i>
-              </div>
-              <div className="flex-1 min-w-0">
-                <p className="text-sm font-medium text-gray-900">Health Tip</p>
-                <p className="text-xs text-gray-500">Stay hydrated throughout the day</p>
-                <span className="text-xs text-gray-400">3 hours ago</span>
-              </div>
-            </div>
-          </div>
-        </div>
-
-        {/* Quick Actions */}
-        <div className="p-6 border-t border-gray-200">
-          <div className="space-y-3">
-            <Link 
-              to="/profile-dashboard" 
-              className="w-full flex items-center space-x-3 p-3 rounded-xl hover:bg-gray-50 text-gray-700 transition-colors"
-            >
-              <i className="fas fa-user text-gray-400"></i>
-              <span className="text-sm">View Profile</span>
-            </Link>
-            <Link 
-              to="/user-details" 
-              className="w-full flex items-center space-x-3 p-3 rounded-xl hover:bg-gray-50 text-gray-700 transition-colors"
-            >
-              <i className="fas fa-user-edit text-gray-400"></i>
-              <span className="text-sm">Edit Profile</span>
-            </Link>
-            <button 
-              onClick={handleLogout}
-              className="w-full flex items-center space-x-3 p-3 rounded-xl hover:bg-red-50 text-red-600 transition-colors"
-            >
-              <i className="fas fa-sign-out-alt"></i>
-              <span className="text-sm">Logout</span>
-            </button>
-          </div>
-        </div>
-      </aside>
 
       {/* Mobile Bottom Navigation */}
       <nav className="fixed bottom-0 left-0 right-0 bg-white shadow-lg lg:hidden z-50 border-t border-gray-200">

@@ -206,7 +206,7 @@ class UserProfileView(APIView):
 class GoogleLoginView(APIView):
     def post(self, request):
         try:
-            serializer = GoogleAuthSerializer(data=request.data)
+        serializer = GoogleAuthSerializer(data=request.data)
             if not serializer.is_valid():
                 return Response({
                     'success': False,
@@ -216,12 +216,12 @@ class GoogleLoginView(APIView):
 
             token = serializer.validated_data['token']
             
-            # Verify the Google token
-            if not settings.GOOGLE_OAUTH2_CLIENT_ID:
-                return Response({
-                    'success': False,
-                    'message': 'Google authentication is not configured properly.'
-                }, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+                # Verify the Google token
+                if not settings.GOOGLE_OAUTH2_CLIENT_ID:
+                    return Response({
+                        'success': False,
+                        'message': 'Google authentication is not configured properly.'
+                    }, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
             try:
                 idinfo = id_token.verify_oauth2_token(
@@ -284,8 +284,8 @@ class GoogleLoginView(APIView):
                 
         except Exception as e:
             print(f"GoogleLoginView outer error: {str(e)}")
-            return Response({
-                'success': False,
+        return Response({
+            'success': False,
                 'message': 'Authentication request failed',
                 'error': str(e)
             }, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
