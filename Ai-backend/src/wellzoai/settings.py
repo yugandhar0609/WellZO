@@ -56,6 +56,7 @@ INSTALLED_APPS = [
     'users',
     'rest_framework_simplejwt',
     'corsheaders',
+    'social_media'
 ]
 
 MIDDLEWARE = [

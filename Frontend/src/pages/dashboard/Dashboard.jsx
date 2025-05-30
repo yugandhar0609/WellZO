@@ -214,6 +214,10 @@ const Dashboard = () => {
                   <i className="fas fa-chart-line"></i>
                   <span>Health Tracking</span>
                 </Link>
+                <Link to="/community" className="flex items-center space-x-3 p-3 rounded-xl hover:bg-gray-100 text-gray-700">
+                  <i className="fas fa-users"></i>
+                  <span>Community</span>
+                </Link>
                 <Link to="/nutrition" className="flex items-center space-x-3 p-3 rounded-xl hover:bg-gray-100 text-gray-700">
                   <i className="fas fa-apple-alt"></i>
                   <span>Nutrition</span>
@@ -269,6 +273,10 @@ const Dashboard = () => {
             <Link to="/health-tracking" className="flex items-center space-x-3 p-4 rounded-xl hover:bg-gray-100 text-gray-700 transition-colors">
               <i className="fas fa-chart-line"></i>
               <span>Health Tracking</span>
+            </Link>
+            <Link to="/community" className="flex items-center space-x-3 p-4 rounded-xl hover:bg-gray-100 text-gray-700 transition-colors">
+              <i className="fas fa-users"></i>
+              <span>Community</span>
             </Link>
             <Link to="/nutrition" className="flex items-center space-x-3 p-4 rounded-xl hover:bg-gray-100 text-gray-700 transition-colors">
               <i className="fas fa-apple-alt"></i>
@@ -661,9 +669,9 @@ const Dashboard = () => {
             <i className="fas fa-home text-lg mb-1"></i>
             <span className="text-xs font-medium">Home</span>
           </Link>
-          <Link to="/health-tracking" className="flex flex-col items-center justify-center text-gray-600 hover:text-emerald-600 transition-colors">
-            <i className="fas fa-chart-line text-lg mb-1"></i>
-            <span className="text-xs">Health</span>
+          <Link to="/community" className="flex flex-col items-center justify-center text-gray-600 hover:text-emerald-600 transition-colors">
+            <i className="fas fa-users text-lg mb-1"></i>
+            <span className="text-xs">Community</span>
           </Link>
           <Link to="/nutrition-ai" className="flex flex-col items-center justify-center text-gray-600 hover:text-emerald-600 transition-colors">
             <div className="w-8 h-8 bg-gradient-to-r from-emerald-500 to-teal-600 rounded-full flex items-center justify-center mb-1">

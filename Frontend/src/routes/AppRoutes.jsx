@@ -16,9 +16,12 @@ import Dashboard from '../pages/dashboard/Dashboard';
 import Workouts from '../pages/dashboard/Workouts';
 import Meals from '../pages/dashboard/Meals';
 import Progress from '../pages/dashboard/Progress';
-import Community from '../pages/dashboard/Community';
 import AIChat from '../pages/dashboard/AIChat';
 import NutritionAI from '../pages/dashboard/NutritionAI';
+
+// Community Pages
+import CommunityFeed from '../pages/community/CommunityFeed';
+import DiscoverPage from '../pages/community/DiscoverPage';
 
 // Search Page
 import SearchPage from '../pages/search/SearchPage';
@@ -66,7 +69,8 @@ const AppRoutes = () => {
       <Route path="/workouts" element={<Workouts />} />
       <Route path="/meals" element={<Meals />} />
       <Route path="/progress" element={<Progress />} />
-      <Route path="/community" element={<Community />} />
+      <Route path="/community" element={<CommunityFeed />} />
+      <Route path="/discover" element={<DiscoverPage />} />
       <Route path="/ai-chat" element={<AIChat />} />
       <Route path="/nutrition-agent" element={<NutritionAI />} />
       <Route path="/search" element={<SearchPage />} />
