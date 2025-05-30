@@ -4,6 +4,8 @@ import { Routes, Route } from 'react-router-dom';
 // import Home from '../pages/landing/Home'; // Kept commented out
 import LandingPage from '../pages/landing/LandingPage';
 
+// Test Page
+import TestPage from '../pages/TestPage';
 
 // Auth Pages
 import Login from '../pages/auth/Login';
@@ -19,8 +21,8 @@ import Progress from '../pages/dashboard/Progress';
 import AIChat from '../pages/dashboard/AIChat';
 import NutritionAI from '../pages/dashboard/NutritionAI';
 
-// Community Pages
-import CommunityFeed from '../pages/community/CommunityFeed';
+// Community Pages - Updated to use working component
+import CommunityPage from '../pages/community/CommunityPage';
 import DiscoverPage from '../pages/community/DiscoverPage';
 
 // Search Page
@@ -57,6 +59,8 @@ const AppRoutes = () => {
       {/* <Route path="/" element={<Home />} /> */}
       <Route path="/" element={<LandingPage />} />
 
+      {/* Test Route */}
+      <Route path="/test" element={<TestPage />} />
 
       {/* Auth Pages */}
       <Route path="/login" element={<Login />} />
@@ -69,7 +73,7 @@ const AppRoutes = () => {
       <Route path="/workouts" element={<Workouts />} />
       <Route path="/meals" element={<Meals />} />
       <Route path="/progress" element={<Progress />} />
-      <Route path="/community" element={<CommunityFeed />} />
+      <Route path="/community" element={<CommunityPage />} />
       <Route path="/discover" element={<DiscoverPage />} />
       <Route path="/ai-chat" element={<AIChat />} />
       <Route path="/nutrition-agent" element={<NutritionAI />} />

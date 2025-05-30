@@ -1,367 +1,533 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
+import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
+import { 
+  faHeart, faCommentDots, faBookmark, faShare, faEllipsisH,
+  faFire, faStar, faBolt, faExpand, faEye, faFlag
+} from '@fortawesome/free-solid-svg-icons';
+import { faHeart as faHeartRegular, faBookmark as faBookmarkRegular } from '@fortawesome/free-regular-svg-icons';
+import { toggleReaction, toggleBookmark, sharePost, getPostComments, createComment } from '../../interceptor/services';
 
-const PostCard = ({ post, onInteraction }) => {
-  const [showFullContent, setShowFullContent] = useState(false);
+const PostCard = ({ post, onUpdate }) => {
   const [showComments, setShowComments] = useState(false);
-  const [showReactions, setShowReactions] = useState(false);
-  const [showReportMenu, setShowReportMenu] = useState(false);
+  const [showExpanded, setShowExpanded] = useState(false);
+  const [newComment, setNewComment] = useState('');
+  const [comments, setComments] = useState(post.comments_preview || []);
+  const [loadingComments, setLoadingComments] = useState(false);
+  const [submittingComment, setSubmittingComment] = useState(false);
+  const [reactions, setReactions] = useState(post.reactions || { liked: false, loved: false, motivated: false });
+  const [counts, setCounts] = useState({
+    likes: post.likes_count || 0,
+    loves: post.loves_count || 0,
+    motivates: post.motivates_count || 0,
+    comments: post.comments_count || 0,
+    shares: post.shares_count || 0,
+    bookmarks: post.bookmarks_count || 0,
+    views: post.views_count || 0
+  });
+  const [bookmarked, setBookmarked] = useState(post.bookmarked || false);
 
-  const handleReaction = (reactionType) => {
-    onInteraction(post.id, 'reaction', reactionType);
-    setShowReactions(false);
+  useEffect(() => {
+    setReactions(post.reactions || { liked: false, loved: false, motivated: false });
+    setBookmarked(post.bookmarked || false);
+    setCounts({
+      likes: post.likes_count || 0,
+      loves: post.loves_count || 0,
+      motivates: post.motivates_count || 0,
+      comments: post.comments_count || 0,
+      shares: post.shares_count || 0,
+      bookmarks: post.bookmarks_count || 0,
+      views: post.views_count || 0
+    });
+  }, [post]);
+
+  const handleReaction = async (reactionType) => {
+    const wasActive = reactions[reactionType];
+    
+    // Optimistic update
+    const newReactions = { liked: false, loved: false, motivated: false };
+    if (!wasActive) {
+      newReactions[reactionType] = true;
+    }
+    setReactions(newReactions);
+    
+    // Update counts optimistically
+    const newCounts = { ...counts };
+    
+    // Remove previous reaction count
+    if (reactions.liked) newCounts.likes -= 1;
+    if (reactions.loved) newCounts.loves -= 1;
+    if (reactions.motivated) newCounts.motivates -= 1;
+    
+    // Add new reaction count
+    if (!wasActive) {
+      if (reactionType === 'liked') newCounts.likes += 1;
+      if (reactionType === 'loved') newCounts.loves += 1;
+      if (reactionType === 'motivated') newCounts.motivates += 1;
+    }
+    
+    setCounts(newCounts);
+
+    try {
+      const result = await toggleReaction(post.id, reactionType);
+      if (!result.success) {
+        // Revert on error
+        setReactions(post.reactions);
+        setCounts({
+          likes: post.likes_count,
+          loves: post.loves_count,
+          motivates: post.motivates_count,
+          comments: post.comments_count,
+          shares: post.shares_count,
+          bookmarks: post.bookmarks_count,
+          views: post.views_count
+        });
+        console.error('Failed to update reaction:', result.message);
+      }
+    } catch (error) {
+      console.error('Error updating reaction:', error);
+      // Revert on error
+      setReactions(post.reactions);
+      setCounts({
+        likes: post.likes_count,
+        loves: post.loves_count,
+        motivates: post.motivates_count,
+        comments: post.comments_count,
+        shares: post.shares_count,
+        bookmarks: post.bookmarks_count,
+        views: post.views_count
+      });
+    }
   };
 
-  const handleComment = () => {
+  const handleBookmark = async () => {
+    const wasBookmarked = bookmarked;
+    
+    // Optimistic update
+    setBookmarked(!wasBookmarked);
+    setCounts(prev => ({
+      ...prev,
+      bookmarks: wasBookmarked ? prev.bookmarks - 1 : prev.bookmarks + 1
+    }));
+
+    try {
+      const result = await toggleBookmark(post.id);
+      if (result.success) {
+        setBookmarked(result.bookmarked);
+      } else {
+        // Revert on error
+        setBookmarked(wasBookmarked);
+        setCounts(prev => ({
+          ...prev,
+          bookmarks: post.bookmarks_count
+        }));
+        console.error('Failed to update bookmark:', result.message);
+      }
+    } catch (error) {
+      console.error('Error updating bookmark:', error);
+      // Revert on error
+      setBookmarked(wasBookmarked);
+      setCounts(prev => ({
+        ...prev,
+        bookmarks: post.bookmarks_count
+      }));
+    }
+  };
+
+  const handleShare = async () => {
+    try {
+      const result = await sharePost(post.id);
+      if (result.success) {
+        setCounts(prev => ({
+          ...prev,
+          shares: prev.shares + 1
+        }));
+        // Show success message or copy link to clipboard
+        navigator.clipboard.writeText(window.location.href);
+      } else {
+        console.error('Failed to share post:', result.message);
+      }
+    } catch (error) {
+      console.error('Error sharing post:', error);
+    }
+  };
+
+  const loadComments = async () => {
+    setLoadingComments(true);
+    try {
+      const result = await getPostComments(post.id);
+      if (result.success) {
+        setComments(result.data.results || []);
+      } else {
+        console.error('Failed to load comments:', result.message);
+      }
+    } catch (error) {
+      console.error('Error loading comments:', error);
+    } finally {
+      setLoadingComments(false);
+    }
+  };
+
+  const handleCommentSubmit = async (e) => {
+    e.preventDefault();
+    if (!newComment.trim()) return;
+
+    setSubmittingComment(true);
+    try {
+      const result = await createComment(post.id, newComment.trim());
+      if (result.success) {
+        setComments(prev => [result.data, ...prev]);
+        setCounts(prev => ({
+          ...prev,
+          comments: prev.comments + 1
+        }));
+        setNewComment('');
+      } else {
+        console.error('Failed to create comment:', result.message);
+      }
+    } catch (error) {
+      console.error('Error creating comment:', error);
+    } finally {
+      setSubmittingComment(false);
+    }
+  };
+
+  const toggleComments = () => {
+    if (!showComments && comments.length === 0) {
+      loadComments();
+    }
     setShowComments(!showComments);
-    if (!showComments) {
-      onInteraction(post.id, 'comment');
-    }
-  };
-
-  const handleShare = () => {
-    onInteraction(post.id, 'share');
-  };
-
-  const handleBookmark = () => {
-    onInteraction(post.id, 'bookmark');
-  };
-
-  const handleReport = (reason) => {
-    onInteraction(post.id, 'report', reason);
-    setShowReportMenu(false);
-  };
-
-  const getPostTypeIcon = (type) => {
-    switch (type) {
-      case 'achievement': return 'fa-trophy';
-      case 'fitness': return 'fa-dumbbell';
-      case 'nutrition': return 'fa-apple-alt';
-      case 'wellness': return 'fa-spa';
-      case 'routine': return 'fa-clock';
-      case 'motivation': return 'fa-fire';
-      default: return 'fa-heart';
-    }
   };
 
   const getPostTypeColor = (type) => {
-    switch (type) {
-      case 'achievement': return 'bg-yellow-100 text-yellow-600';
-      case 'fitness': return 'bg-orange-100 text-orange-600';
-      case 'nutrition': return 'bg-green-100 text-green-600';
-      case 'wellness': return 'bg-purple-100 text-purple-600';
-      case 'routine': return 'bg-blue-100 text-blue-600';
-      case 'motivation': return 'bg-red-100 text-red-600';
-      default: return 'bg-emerald-100 text-emerald-600';
-    }
+    const colors = {
+      fitness: 'bg-red-100 text-red-800 border-red-200',
+      nutrition: 'bg-green-100 text-green-800 border-green-200',
+      wellness: 'bg-purple-100 text-purple-800 border-purple-200',
+      routine: 'bg-blue-100 text-blue-800 border-blue-200',
+      motivation: 'bg-yellow-100 text-yellow-800 border-yellow-200',
+      achievement: 'bg-orange-100 text-orange-800 border-orange-200',
+      general: 'bg-gray-100 text-gray-800 border-gray-200'
+    };
+    return colors[type] || colors.general;
   };
 
-  const reactions = [
-    { type: 'liked', icon: 'fa-heart', color: 'text-red-500', bgColor: 'bg-red-100', label: 'Like', count: post.likes },
-    { type: 'loved', icon: 'fa-star', color: 'text-yellow-500', bgColor: 'bg-yellow-100', label: 'Love', count: post.loves },
-    { type: 'motivated', icon: 'fa-bolt', color: 'text-blue-500', bgColor: 'bg-blue-100', label: 'Motivate', count: post.motivates }
-  ];
-
-  const totalReactions = post.likes + post.loves + post.motivates;
-  const activeReactions = reactions.filter(r => post.reactions[r.type]);
-
-  const truncatedContent = post.content.length > 200 
-    ? post.content.substring(0, 200) + '...' 
-    : post.content;
-
-  // Close menus when clicking outside
-  React.useEffect(() => {
-    const handleClickOutside = (event) => {
-      if (!event.target.closest('.reaction-menu') && !event.target.closest('.reaction-button')) {
-        setShowReactions(false);
-      }
-      if (!event.target.closest('.report-menu') && !event.target.closest('.report-button')) {
-        setShowReportMenu(false);
-      }
-    };
-
-    document.addEventListener('mousedown', handleClickOutside);
-    return () => {
-      document.removeEventListener('mousedown', handleClickOutside);
-    };
-  }, []);
+  const formatCount = (count) => {
+    if (count >= 1000000) return `${(count / 1000000).toFixed(1)}M`;
+    if (count >= 1000) return `${(count / 1000).toFixed(1)}K`;
+    return count.toString();
+  };
 
   return (
-    <div className="bg-white rounded-2xl shadow-sm border border-gray-100 hover:shadow-md transition-all duration-200 relative">
-      {/* Post Header */}
-      <div className="p-4 sm:p-6 pb-4">
-        <div className="flex items-center justify-between mb-4">
-          <div className="flex items-center space-x-3 min-w-0 flex-1">
-            <div className="relative flex-shrink-0">
-              <img
-                src={post.user.avatar}
-                alt={post.user.name}
-                className="w-10 h-10 sm:w-12 sm:h-12 rounded-full object-cover border-2 border-emerald-200"
-              />
-              {post.user.verified && (
-                <div className="absolute -bottom-1 -right-1 w-4 h-4 sm:w-5 sm:h-5 bg-emerald-500 rounded-full flex items-center justify-center">
-                  <i className="fas fa-check text-white text-xs"></i>
-                </div>
-              )}
-            </div>
-            <div className="min-w-0 flex-1">
+    <div className="bg-white rounded-xl shadow-sm border border-gray-100 hover:shadow-md transition-all duration-300">
+      {/* Header */}
+      <div className="p-6 pb-4">
+        <div className="flex items-start justify-between">
+          <div className="flex items-center space-x-3">
+            <img
+              src={post.user.avatar}
+              alt={post.user.username}
+              className="w-12 h-12 rounded-full object-cover ring-2 ring-emerald-100"
+            />
+            <div>
               <div className="flex items-center space-x-2">
-                <h3 className="font-semibold text-gray-900 text-sm sm:text-base truncate">{post.user.name}</h3>
-                <span className="text-gray-400 hidden sm:inline">•</span>
-                <span className="text-xs sm:text-sm text-gray-500 flex-shrink-0">{post.timestamp}</span>
+                <h3 className="font-semibold text-gray-900">{post.user.first_name} {post.user.last_name}</h3>
+                {post.user.verified && (
+                  <div className="w-5 h-5 bg-blue-500 rounded-full flex items-center justify-center">
+                    <svg className="w-3 h-3 text-white" fill="currentColor" viewBox="0 0 20 20">
+                      <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
+                    </svg>
+                  </div>
+                )}
               </div>
-              <p className="text-xs sm:text-sm text-gray-600 truncate">{post.user.title}</p>
+              <div className="flex items-center space-x-2 text-sm text-gray-500">
+                <span>@{post.user.username}</span>
+                <span>•</span>
+                <span>{post.timestamp}</span>
+                <span>•</span>
+                <span className={`px-2 py-1 rounded-full text-xs font-medium border ${getPostTypeColor(post.type)}`}>
+                  {post.type.charAt(0).toUpperCase() + post.type.slice(1)}
+                </span>
+              </div>
             </div>
           </div>
           
-          <div className="flex items-center space-x-2 flex-shrink-0">
-            {/* Post Type Badge */}
-            <div className={`px-2 sm:px-3 py-1 rounded-full text-xs font-medium ${getPostTypeColor(post.type)}`}>
-              <i className={`fas ${getPostTypeIcon(post.type)} mr-1`}></i>
-              <span className="hidden sm:inline">{post.type.charAt(0).toUpperCase() + post.type.slice(1)}</span>
-            </div>
-            
-            {/* More Options */}
-            <div className="relative">
-              <button
-                onClick={() => setShowReportMenu(!showReportMenu)}
-                className="report-button p-2 text-gray-400 hover:text-gray-600 rounded-lg hover:bg-gray-100 transition-colors"
-              >
-                <i className="fas fa-ellipsis-h"></i>
-              </button>
-              
-              {showReportMenu && (
-                <div className="report-menu absolute right-0 top-10 bg-white rounded-lg shadow-lg border border-gray-200 py-2 z-20 min-w-[160px]">
-                  <button
-                    onClick={() => handleBookmark()}
-                    className="w-full px-4 py-2 text-left text-sm text-gray-700 hover:bg-gray-100 flex items-center space-x-2"
-                  >
-                    <i className={`fas fa-bookmark ${post.bookmarked ? 'text-emerald-600' : ''}`}></i>
-                    <span>{post.bookmarked ? 'Remove Bookmark' : 'Bookmark'}</span>
-                  </button>
-                  <button
-                    onClick={() => handleReport('inappropriate')}
-                    className="w-full px-4 py-2 text-left text-sm text-red-600 hover:bg-red-50 flex items-center space-x-2"
-                  >
-                    <i className="fas fa-flag"></i>
-                    <span>Report</span>
-                  </button>
-                </div>
-              )}
-            </div>
+          <div className="flex items-center space-x-2">
+            <button className="p-2 text-gray-400 hover:text-gray-600 rounded-lg hover:bg-gray-50 transition-colors">
+              <FontAwesomeIcon icon={faFlag} className="text-sm" />
+            </button>
+            <button className="p-2 text-gray-400 hover:text-gray-600 rounded-lg hover:bg-gray-50 transition-colors">
+              <FontAwesomeIcon icon={faEllipsisH} />
+            </button>
           </div>
         </div>
+      </div>
 
-        {/* Post Content */}
-        <div className="mb-4">
-          <p className="text-gray-800 leading-relaxed text-sm sm:text-base">
-            {showFullContent ? post.content : truncatedContent}
-          </p>
-          {post.content.length > 200 && (
-            <button
-              onClick={() => setShowFullContent(!showFullContent)}
-              className="text-emerald-600 text-sm font-medium mt-2 hover:text-emerald-700"
-            >
-              {showFullContent ? 'Show less' : 'Read more'}
-            </button>
-          )}
+      {/* Content */}
+      <div className="px-6 pb-4">
+        <div className={`text-gray-900 leading-relaxed ${showExpanded ? '' : 'line-clamp-3'}`}>
+          {post.content}
         </div>
+        
+        {post.content.length > 200 && (
+          <button
+            onClick={() => setShowExpanded(!showExpanded)}
+            className="text-emerald-600 hover:text-emerald-700 text-sm font-medium mt-2 flex items-center space-x-1"
+          >
+            <span>{showExpanded ? 'Show less' : 'Read more'}</span>
+            <FontAwesomeIcon icon={faExpand} className="text-xs" />
+          </button>
+        )}
 
-        {/* Post Media */}
+        {/* Media */}
         {post.media && post.media.length > 0 && (
-          <div className="mb-4 rounded-xl overflow-hidden relative">
-            {post.media[0].type === 'video' ? (
-              <video
-                src={post.media[0].url}
-                className="w-full max-h-80 object-cover"
-                controls
-                poster="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='100' height='100'%3E%3Crect width='100' height='100' fill='%23f0f0f0'/%3E%3Ctext x='50%25' y='50%25' text-anchor='middle' dy='.3em' fill='%23999'%3EVideo%3C/text%3E%3C/svg%3E"
+          <div className="mt-4 rounded-lg overflow-hidden">
+            {post.media[0].media_type === 'image' ? (
+              <img
+                src={post.media[0].file_url}
+                alt="Post media"
+                className="w-full max-h-96 object-cover"
               />
             ) : (
-              <img
-                src={post.media[0].url || post.images?.[0]}
-                alt="Post content"
-                className="w-full max-h-80 object-cover hover:scale-105 transition-transform duration-300 cursor-pointer"
+              <video
+                src={post.media[0].file_url}
+                controls
+                className="w-full max-h-96"
+                poster={post.media[0].thumbnail_url}
               />
-            )}
-            {post.media.length > 1 && (
-              <div className="absolute bottom-2 right-2 bg-black bg-opacity-60 text-white px-2 py-1 rounded text-xs">
-                +{post.media.length - 1} more
-              </div>
             )}
           </div>
         )}
 
-        {/* Metrics Card */}
-        {post.metrics && (
-          <div className="bg-gradient-to-r from-emerald-50 to-teal-50 rounded-xl p-3 sm:p-4 mb-4">
-            <div className="grid grid-cols-3 gap-2 sm:gap-4">
-              {Object.entries(post.metrics).map(([key, value], index) => (
-                <div key={index} className="text-center">
-                  <div className="text-sm sm:text-lg font-bold text-emerald-700">{value}</div>
-                  <div className="text-xs text-emerald-600 capitalize">{key.replace('_', ' ')}</div>
+        {/* Hashtags */}
+        {post.tags && post.tags.length > 0 && (
+          <div className="flex flex-wrap gap-2 mt-4">
+            {post.tags.map((tag, index) => (
+              <span
+                key={index}
+                className="text-emerald-600 hover:text-emerald-700 cursor-pointer text-sm font-medium"
+              >
+                #{tag}
+              </span>
+            ))}
+          </div>
+        )}
+
+        {/* Metrics */}
+        {post.metrics && Object.keys(post.metrics.data).length > 0 && (
+          <div className="mt-4 p-3 bg-gray-50 rounded-lg">
+            <div className="grid grid-cols-2 gap-4 text-sm">
+              {Object.entries(post.metrics.data).map(([key, value]) => (
+                <div key={key} className="flex justify-between">
+                  <span className="text-gray-600 capitalize">{key.replace('_', ' ')}:</span>
+                  <span className="font-medium text-gray-900">{value}</span>
                 </div>
               ))}
             </div>
-          </div>
-        )}
-
-        {/* Tags */}
-        {post.tags && post.tags.length > 0 && (
-          <div className="flex flex-wrap gap-2 mb-4">
-            {post.tags.slice(0, 5).map((tag, index) => (
-              <span
-                key={index}
-                className="bg-gray-100 hover:bg-emerald-50 text-gray-600 hover:text-emerald-700 px-2 sm:px-3 py-1 rounded-full text-xs sm:text-sm cursor-pointer transition-colors"
-              >
-                {tag}
-              </span>
-            ))}
-            {post.tags.length > 5 && (
-              <span className="text-gray-400 text-xs sm:text-sm">
-                +{post.tags.length - 5} more
-              </span>
-            )}
           </div>
         )}
       </div>
 
-      {/* Interaction Bar */}
-      <div className="px-4 sm:px-6 py-3 sm:py-4 border-t border-gray-50">
-        {/* Reaction Summary */}
-        {totalReactions > 0 && (
-          <div className="flex items-center justify-between mb-3 text-sm text-gray-500">
-            <div className="flex items-center space-x-1">
-              {activeReactions.map(reaction => (
-                <span key={reaction.type} className={`w-5 h-5 rounded-full ${reaction.bgColor} flex items-center justify-center`}>
-                  <i className={`fas ${reaction.icon} ${reaction.color} text-xs`}></i>
-                </span>
-              ))}
-              <span className="ml-2">{totalReactions} {totalReactions === 1 ? 'reaction' : 'reactions'}</span>
-            </div>
-            <div className="flex items-center space-x-4 text-xs">
-              {post.comments > 0 && <span>{post.comments} comments</span>}
-              {post.shares > 0 && <span>{post.shares} shares</span>}
-              {post.views > 0 && <span>{post.views} views</span>}
-            </div>
+      {/* Stats */}
+      <div className="px-6 py-3 border-t border-gray-100">
+        <div className="flex items-center justify-between text-sm text-gray-500">
+          <div className="flex items-center space-x-4">
+            <span className="flex items-center space-x-1">
+              <FontAwesomeIcon icon={faEye} className="text-xs" />
+              <span>{formatCount(counts.views)} views</span>
+            </span>
           </div>
-        )}
-
-        <div className="flex items-center justify-between">
-          <div className="flex items-center space-x-1 sm:space-x-4">
-            {/* Reaction Button */}
-            <div className="relative">
+          <div className="flex items-center space-x-4">
+            {(counts.likes > 0 || counts.loves > 0 || counts.motivates > 0) && (
+              <span>{formatCount(counts.likes + counts.loves + counts.motivates)} reactions</span>
+            )}
+            {counts.comments > 0 && (
               <button
-                onClick={() => setShowReactions(!showReactions)}
-                className={`reaction-button flex items-center space-x-1 sm:space-x-2 px-2 sm:px-3 py-2 rounded-lg transition-colors ${
-                  activeReactions.length > 0
-                    ? 'text-emerald-600 bg-emerald-50' 
-                    : 'text-gray-500 hover:text-emerald-600 hover:bg-emerald-50'
+                onClick={toggleComments}
+                className="hover:text-gray-700 transition-colors"
+              >
+                {formatCount(counts.comments)} {counts.comments === 1 ? 'comment' : 'comments'}
+              </button>
+            )}
+          </div>
+        </div>
+      </div>
+
+      {/* Actions */}
+      <div className="px-6 py-4 border-t border-gray-100">
+        <div className="flex items-center justify-between">
+          <div className="flex items-center space-x-6">
+            {/* Reactions */}
+            <div className="flex items-center space-x-2">
+              <button
+                onClick={() => handleReaction('liked')}
+                className={`flex items-center space-x-2 px-3 py-2 rounded-lg transition-all duration-200 ${
+                  reactions.liked
+                    ? 'bg-red-50 text-red-600 hover:bg-red-100'
+                    : 'text-gray-600 hover:bg-gray-50 hover:text-red-600'
                 }`}
               >
-                <i className="fas fa-heart text-sm sm:text-base"></i>
-                <span className="font-medium text-xs sm:text-sm">{totalReactions || 'React'}</span>
+                <FontAwesomeIcon icon={reactions.liked ? faHeart : faHeartRegular} />
+                <span className="text-sm font-medium">{formatCount(counts.likes)}</span>
               </button>
-
-              {/* Reaction Popup */}
-              {showReactions && (
-                <div className="reaction-menu absolute bottom-12 left-0 bg-white rounded-lg shadow-lg border border-gray-200 p-2 flex space-x-2 z-20">
-                  {reactions.map((reaction) => (
-                    <button
-                      key={reaction.type}
-                      onClick={() => handleReaction(reaction.type)}
-                      className={`p-2 rounded-lg transition-all hover:scale-110 ${
-                        post.reactions[reaction.type] 
-                          ? `${reaction.bgColor} ${reaction.color}` 
-                          : 'hover:bg-gray-100 text-gray-400'
-                      }`}
-                      title={reaction.label}
-                    >
-                      <i className={`fas ${reaction.icon} text-lg`}></i>
-                    </button>
-                  ))}
-                </div>
-              )}
+              
+              <button
+                onClick={() => handleReaction('loved')}
+                className={`flex items-center space-x-2 px-3 py-2 rounded-lg transition-all duration-200 ${
+                  reactions.loved
+                    ? 'bg-yellow-50 text-yellow-600 hover:bg-yellow-100'
+                    : 'text-gray-600 hover:bg-gray-50 hover:text-yellow-600'
+                }`}
+              >
+                <FontAwesomeIcon icon={faStar} />
+                <span className="text-sm font-medium">{formatCount(counts.loves)}</span>
+              </button>
+              
+              <button
+                onClick={() => handleReaction('motivated')}
+                className={`flex items-center space-x-2 px-3 py-2 rounded-lg transition-all duration-200 ${
+                  reactions.motivated
+                    ? 'bg-purple-50 text-purple-600 hover:bg-purple-100'
+                    : 'text-gray-600 hover:bg-gray-50 hover:text-purple-600'
+                }`}
+              >
+                <FontAwesomeIcon icon={faBolt} />
+                <span className="text-sm font-medium">{formatCount(counts.motivates)}</span>
+              </button>
             </div>
-
-            {/* Comment Button */}
-            <button
-              onClick={handleComment}
-              className="flex items-center space-x-1 sm:space-x-2 px-2 sm:px-3 py-2 rounded-lg text-gray-500 hover:text-emerald-600 hover:bg-emerald-50 transition-colors"
-            >
-              <i className="far fa-comment text-sm sm:text-base"></i>
-              <span className="font-medium text-xs sm:text-sm">{post.comments || 'Comment'}</span>
-            </button>
-
-            {/* Share Button */}
-            <button
-              onClick={handleShare}
-              className="flex items-center space-x-1 sm:space-x-2 px-2 sm:px-3 py-2 rounded-lg text-gray-500 hover:text-blue-600 hover:bg-blue-50 transition-colors"
-            >
-              <i className="far fa-share text-sm sm:text-base"></i>
-              <span className="font-medium text-xs sm:text-sm hidden sm:inline">{post.shares || 'Share'}</span>
-            </button>
           </div>
 
-          {/* Bookmark Button */}
-          <button 
-            onClick={handleBookmark}
-            className={`p-2 rounded-lg transition-colors ${
-              post.bookmarked 
-                ? 'text-emerald-600 bg-emerald-50' 
-                : 'text-gray-500 hover:text-emerald-600 hover:bg-emerald-50'
-            }`}
-          >
-            <i className={`${post.bookmarked ? 'fas' : 'far'} fa-bookmark text-sm sm:text-base`}></i>
-          </button>
+          <div className="flex items-center space-x-3">
+            <button
+              onClick={toggleComments}
+              className="flex items-center space-x-2 px-3 py-2 text-gray-600 hover:bg-gray-50 hover:text-blue-600 rounded-lg transition-all duration-200"
+            >
+              <FontAwesomeIcon icon={faCommentDots} />
+              <span className="text-sm font-medium">Comment</span>
+            </button>
+            
+            <button
+              onClick={handleBookmark}
+              className={`flex items-center space-x-2 px-3 py-2 rounded-lg transition-all duration-200 ${
+                bookmarked
+                  ? 'bg-emerald-50 text-emerald-600 hover:bg-emerald-100'
+                  : 'text-gray-600 hover:bg-gray-50 hover:text-emerald-600'
+              }`}
+            >
+              <FontAwesomeIcon icon={bookmarked ? faBookmark : faBookmarkRegular} />
+              <span className="text-sm font-medium">Save</span>
+            </button>
+            
+            <button
+              onClick={handleShare}
+              className="flex items-center space-x-2 px-3 py-2 text-gray-600 hover:bg-gray-50 hover:text-green-600 rounded-lg transition-all duration-200"
+            >
+              <FontAwesomeIcon icon={faShare} />
+              <span className="text-sm font-medium">Share</span>
+            </button>
+          </div>
         </div>
       </div>
 
       {/* Comments Section */}
       {showComments && (
-        <div className="px-4 sm:px-6 pb-4 sm:pb-6 border-t border-gray-50">
-          <div className="mt-4 space-y-3">
-            {/* Mock Comments */}
+        <div className="border-t border-gray-100">
+          {/* Comment Form */}
+          <form onSubmit={handleCommentSubmit} className="p-6 border-b border-gray-100">
             <div className="flex space-x-3">
               <img
-                src="https://images.unsplash.com/photo-1438761681033-6461ffad8d80?w=40&h=40&fit=crop&crop=face"
-                alt="Commenter"
-                className="w-8 h-8 rounded-full object-cover flex-shrink-0"
-              />
-              <div className="flex-1 min-w-0">
-                <div className="bg-gray-50 rounded-lg px-3 py-2">
-                  <div className="font-medium text-sm text-gray-900">Lisa Park</div>
-                  <div className="text-sm text-gray-700">Amazing progress! Keep it up! 💪</div>
-                </div>
-                <div className="flex items-center space-x-4 mt-1">
-                  <span className="text-xs text-gray-500">2 hours ago</span>
-                  <button className="text-xs text-gray-500 hover:text-emerald-600">Reply</button>
-                  <button className="text-xs text-gray-500 hover:text-red-600">
-                    <i className="far fa-heart mr-1"></i>12
-                  </button>
-                </div>
-              </div>
-            </div>
-
-            {/* Add Comment */}
-            <div className="flex space-x-3 mt-4">
-              <img
-                src={post.user.avatar || 'https://via.placeholder.com/32'}
-                alt="You"
-                className="w-8 h-8 rounded-full object-cover flex-shrink-0"
+                src="https://ui-avatars.com/api/?name=You&background=10b981&color=ffffff"
+                alt="Your avatar"
+                className="w-8 h-8 rounded-full"
               />
               <div className="flex-1">
-                <div className="flex items-center space-x-2">
-                  <input
-                    type="text"
-                    placeholder="Add a comment..."
-                    className="flex-1 bg-gray-50 border-0 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-emerald-500 focus:bg-white transition-colors"
-                  />
-                  <button className="text-emerald-600 hover:text-emerald-700 px-3 py-2 text-sm font-medium">
-                    Post
+                <textarea
+                  value={newComment}
+                  onChange={(e) => setNewComment(e.target.value)}
+                  placeholder="Write a comment..."
+                  className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 resize-none"
+                  rows="2"
+                />
+                <div className="flex justify-end mt-2">
+                  <button
+                    type="submit"
+                    disabled={!newComment.trim() || submittingComment}
+                    className="px-4 py-2 bg-emerald-600 text-white rounded-lg hover:bg-emerald-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                  >
+                    {submittingComment ? 'Posting...' : 'Post Comment'}
                   </button>
                 </div>
               </div>
             </div>
+          </form>
+
+          {/* Comments List */}
+          <div className="max-h-96 overflow-y-auto">
+            {loadingComments ? (
+              <div className="p-6 text-center">
+                <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-emerald-600 mx-auto"></div>
+                <p className="text-gray-600 mt-2">Loading comments...</p>
+              </div>
+            ) : comments.length === 0 ? (
+              <div className="p-6 text-center text-gray-500">
+                No comments yet. Be the first to comment!
+              </div>
+            ) : (
+              <div className="space-y-4 p-6">
+                {comments.map((comment) => (
+                  <div key={comment.id} className="flex space-x-3">
+                    <img
+                      src={comment.user.avatar}
+                      alt={comment.user.username}
+                      className="w-8 h-8 rounded-full"
+                    />
+                    <div className="flex-1">
+                      <div className="bg-gray-50 rounded-lg p-3">
+                        <div className="flex items-center space-x-2 mb-1">
+                          <span className="font-medium text-gray-900">{comment.user.first_name} {comment.user.last_name}</span>
+                          <span className="text-xs text-gray-500">
+                            {new Date(comment.created_at).toLocaleDateString()}
+                          </span>
+                        </div>
+                        <p className="text-gray-800">{comment.content}</p>
+                      </div>
+                      <div className="flex items-center space-x-4 mt-2 text-sm text-gray-500">
+                        <button className="hover:text-red-600 transition-colors">
+                          <FontAwesomeIcon icon={faHeart} className="mr-1" />
+                          {comment.likes_count || 0}
+                        </button>
+                        <button className="hover:text-blue-600 transition-colors">Reply</button>
+                      </div>
+                      
+                      {/* Replies */}
+                      {comment.replies && comment.replies.length > 0 && (
+                        <div className="ml-4 mt-3 space-y-3">
+                          {comment.replies.map((reply) => (
+                            <div key={reply.id} className="flex space-x-3">
+                              <img
+                                src={reply.user.avatar}
+                                alt={reply.user.username}
+                                className="w-6 h-6 rounded-full"
+                              />
+                              <div className="flex-1">
+                                <div className="bg-gray-50 rounded-lg p-2">
+                                  <div className="flex items-center space-x-2 mb-1">
+                                    <span className="font-medium text-gray-900 text-sm">{reply.user.first_name} {reply.user.last_name}</span>
+                                    <span className="text-xs text-gray-500">
+                                      {new Date(reply.created_at).toLocaleDateString()}
+                                    </span>
+                                  </div>
+                                  <p className="text-gray-800 text-sm">{reply.content}</p>
+                                </div>
+                              </div>
+                            </div>
+                          ))}
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
           </div>
         </div>
       )}

@@ -1,461 +1,440 @@
 import React, { useState, useRef } from 'react';
+import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
+import { 
+  faTimes, faImage, faVideo, faHashtag, faSmile, faPaperPlane,
+  faDumbbell, faAppleAlt, faBrain, faCalendar, faFire, faTrophy
+} from '@fortawesome/free-solid-svg-icons';
+import { createPost } from '../../interceptor/services';
 
-const CreatePost = ({ onClose, onSubmit, user }) => {
+const CreatePost = ({ onClose, onPostCreated }) => {
   const [postType, setPostType] = useState('general');
   const [content, setContent] = useState('');
-  const [media, setMedia] = useState([]);
+  const [hashtags, setHashtags] = useState([]);
+  const [hashtagInput, setHashtagInput] = useState('');
+  const [mediaFiles, setMediaFiles] = useState([]);
   const [metrics, setMetrics] = useState({});
-  const [tags, setTags] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const [aiSuggestions, setAiSuggestions] = useState({ captions: [], hashtags: [] });
-  const [showAiSuggestions, setShowAiSuggestions] = useState(false);
+  const [error, setError] = useState('');
   const fileInputRef = useRef(null);
 
   const postTypes = [
-    { id: 'fitness', name: 'Fitness', icon: 'fa-dumbbell', color: 'orange', desc: 'Workouts, exercises, strength training' },
-    { id: 'nutrition', name: 'Meal Tips', icon: 'fa-apple-alt', color: 'green', desc: 'Healthy recipes, meal prep, nutrition advice' },
-    { id: 'wellness', name: 'Mental Wellness', icon: 'fa-spa', color: 'purple', desc: 'Meditation, therapy, stress management' },
-    { id: 'routine', name: 'Daily Routine', icon: 'fa-clock', color: 'blue', desc: 'Morning routines, productivity, habits' },
-    { id: 'motivation', name: 'Motivation', icon: 'fa-fire', color: 'red', desc: 'Inspiration, success stories, mindset' },
-    { id: 'achievement', name: 'Achievement', icon: 'fa-trophy', color: 'yellow', desc: 'Personal records, milestones, victories' }
+    { value: 'general', label: 'General', icon: faSmile, color: 'text-gray-600' },
+    { value: 'fitness', label: 'Fitness', icon: faDumbbell, color: 'text-red-600' },
+    { value: 'nutrition', label: 'Nutrition', icon: faAppleAlt, color: 'text-green-600' },
+    { value: 'wellness', label: 'Mental Wellness', icon: faBrain, color: 'text-purple-600' },
+    { value: 'routine', label: 'Daily Routine', icon: faCalendar, color: 'text-blue-600' },
+    { value: 'motivation', label: 'Motivation', icon: faFire, color: 'text-orange-600' },
+    { value: 'achievement', label: 'Achievement', icon: faTrophy, color: 'text-yellow-600' }
   ];
 
-  const metricFields = {
-    fitness: [
-      { key: 'exercise', label: 'Exercise Type', placeholder: 'Deadlift, Running, HIIT' },
-      { key: 'duration', label: 'Duration', placeholder: '45 minutes' },
-      { key: 'intensity', label: 'Intensity/Weight', placeholder: '315 lbs, High intensity' }
-    ],
-    nutrition: [
-      { key: 'meal_type', label: 'Meal Type', placeholder: 'Breakfast, Post-workout' },
-      { key: 'calories', label: 'Calories', placeholder: '450 cal' },
-      { key: 'prep_time', label: 'Prep Time', placeholder: '15 minutes' }
-    ],
-    wellness: [
-      { key: 'activity', label: 'Activity', placeholder: 'Meditation, Journaling' },
-      { key: 'duration', label: 'Duration', placeholder: '20 minutes' },
-      { key: 'mood_impact', label: 'Mood Impact', placeholder: 'Stress -40%' }
-    ],
-    routine: [
-      { key: 'time', label: 'Time of Day', placeholder: '6:00 AM' },
-      { key: 'duration', label: 'Duration', placeholder: '1 hour' },
-      { key: 'consistency', label: 'Streak', placeholder: '30 days' }
-    ],
-    achievement: [
-      { key: 'milestone', label: 'Milestone', placeholder: 'First 5K, 30-day streak' },
-      { key: 'improvement', label: 'Improvement', placeholder: '+25% strength' },
-      { key: 'timeframe', label: 'Timeframe', placeholder: '3 months' }
-    ]
-  };
-
-  const suggestedTags = {
-    fitness: ['#workout', '#strength', '#cardio', '#fitness', '#personalrecord', '#gym'],
-    nutrition: ['#healthyeating', '#mealprep', '#nutrition', '#recipe', '#vegmealplan', '#postworkout'],
-    wellness: ['#mentalhealth', '#meditation', '#selfcare', '#mindfulness', '#therapy', '#wellness'],
-    routine: ['#morningroutine', '#productivity', '#habits', '#dailyroutine', '#consistency', '#lifestyle'],
-    motivation: ['#motivation', '#inspiration', '#mindset', '#goals', '#success', '#positivity'],
-    achievement: ['#milestone', '#achievement', '#progress', '#success', '#proud', '#victory']
-  };
-
-  // AI Caption Suggestions
-  const generateAiSuggestions = async () => {
-    setShowAiSuggestions(true);
-    
-    // Simulate AI API call
-    setTimeout(() => {
-      const captionSuggestions = {
-        fitness: [
-          "Just crushed my workout! 💪 Remember, consistency beats perfection every time.",
-          "New personal record today! The only competition is with yesterday's version of yourself.",
-          "Sweat is just your fat crying 😅 What's your favorite way to stay active?"
-        ],
-        nutrition: [
-          "Fuel your body like the amazing machine it is! 🥗 Here's my latest healthy creation.",
-          "Meal prep Sunday complete! Planning ahead is the secret to eating well all week.",
-          "Eating the rainbow never tasted so good! 🌈 What's your favorite colorful ingredient?"
-        ],
-        wellness: [
-          "Taking time for my mental health today 🧘‍♀️ Self-care isn't selfish, it's essential.",
-          "Progress isn't always visible, but it's always happening. Be patient with yourself.",
-          "Your mind is a garden - what are you choosing to water today? 🌱"
-        ]
-      };
-
-      const hashtagSuggestions = suggestedTags[postType] || [];
-      
-      setAiSuggestions({
-        captions: captionSuggestions[postType] || captionSuggestions.fitness,
-        hashtags: hashtagSuggestions
-      });
-    }, 1500);
-  };
-
-  const handleMediaUpload = (e) => {
-    const files = Array.from(e.target.files);
-    const validTypes = ['image/jpeg', 'image/png', 'image/gif', 'video/mp4', 'video/mov', 'video/avi'];
-    
-    const validFiles = files.filter(file => {
-      if (!validTypes.includes(file.type)) {
-        alert(`${file.name} is not a supported format. Please upload images (JPG, PNG, GIF) or videos (MP4, MOV, AVI).`);
-        return false;
-      }
-      if (file.size > 100 * 1024 * 1024) { // 100MB limit
-        alert(`${file.name} is too large. Please upload files under 100MB.`);
-        return false;
-      }
-      return true;
-    });
-
-    const mediaUrls = validFiles.map(file => ({
-      url: URL.createObjectURL(file),
-      type: file.type.startsWith('video/') ? 'video' : 'image',
-      name: file.name
-    }));
-    
-    setMedia([...media, ...mediaUrls]);
-  };
-
-  const removeMedia = (index) => {
-    setMedia(media.filter((_, i) => i !== index));
-  };
-
-  const handleMetricChange = (key, value) => {
-    setMetrics({ ...metrics, [key]: value });
-  };
-
-  const addSuggestedTag = (tag) => {
-    if (!tags.includes(tag)) {
-      setTags(tags ? `${tags} ${tag}` : tag);
+  const getMetricFields = (type) => {
+    switch (type) {
+      case 'fitness':
+        return [
+          { key: 'exercise_type', label: 'Exercise Type', type: 'text', placeholder: 'e.g., Running, Weightlifting' },
+          { key: 'duration', label: 'Duration (minutes)', type: 'number', placeholder: '30' },
+          { key: 'calories_burned', label: 'Calories Burned', type: 'number', placeholder: '200' },
+          { key: 'intensity', label: 'Intensity', type: 'select', options: ['Low', 'Medium', 'High'] }
+        ];
+      case 'nutrition':
+        return [
+          { key: 'meal_type', label: 'Meal Type', type: 'select', options: ['Breakfast', 'Lunch', 'Dinner', 'Snack'] },
+          { key: 'calories', label: 'Calories', type: 'number', placeholder: '400' },
+          { key: 'protein', label: 'Protein (g)', type: 'number', placeholder: '25' },
+          { key: 'carbs', label: 'Carbs (g)', type: 'number', placeholder: '30' }
+        ];
+      case 'wellness':
+        return [
+          { key: 'mood_rating', label: 'Mood (1-10)', type: 'number', min: 1, max: 10, placeholder: '8' },
+          { key: 'stress_level', label: 'Stress Level', type: 'select', options: ['Low', 'Medium', 'High'] },
+          { key: 'sleep_hours', label: 'Sleep Hours', type: 'number', placeholder: '8' }
+        ];
+      case 'routine':
+        return [
+          { key: 'routine_type', label: 'Routine Type', type: 'select', options: ['Morning', 'Evening', 'Workout', 'Work'] },
+          { key: 'duration', label: 'Duration (minutes)', type: 'number', placeholder: '60' },
+          { key: 'completion_rate', label: 'Completion Rate (%)', type: 'number', min: 0, max: 100, placeholder: '90' }
+        ];
+      case 'achievement':
+        return [
+          { key: 'achievement_type', label: 'Achievement Type', type: 'text', placeholder: 'e.g., Weight Loss, PR, Habit' },
+          { key: 'milestone', label: 'Milestone', type: 'text', placeholder: 'e.g., 10 lbs lost, 100 push-ups' },
+          { key: 'time_period', label: 'Time Period', type: 'text', placeholder: 'e.g., 3 months, 30 days' }
+        ];
+      default:
+        return [];
     }
   };
 
-  const useSuggestedCaption = (caption) => {
-    setContent(caption);
-    setShowAiSuggestions(false);
+  const suggestedHashtags = {
+    fitness: ['#workout', '#fitness', '#exercise', '#strength', '#cardio', '#gym'],
+    nutrition: ['#healthy', '#nutrition', '#meal', '#diet', '#organic', '#protein'],
+    wellness: ['#mentalhealth', '#mindfulness', '#meditation', '#selfcare', '#wellness'],
+    routine: ['#routine', '#habits', '#productivity', '#morning', '#evening'],
+    motivation: ['#motivation', '#inspiration', '#goals', '#success', '#mindset'],
+    achievement: ['#achievement', '#milestone', '#progress', '#success', '#proud'],
+    general: ['#community', '#sharing', '#life', '#update', '#thoughts']
+  };
+
+  const handleAddHashtag = (tag) => {
+    const cleanTag = tag.startsWith('#') ? tag.slice(1) : tag;
+    if (cleanTag && !hashtags.includes(cleanTag)) {
+      setHashtags([...hashtags, cleanTag]);
+    }
+    setHashtagInput('');
+  };
+
+  const handleHashtagKeyPress = (e) => {
+    if (e.key === 'Enter' || e.key === ' ') {
+      e.preventDefault();
+      handleAddHashtag(hashtagInput);
+    }
+  };
+
+  const removeHashtag = (tagToRemove) => {
+    setHashtags(hashtags.filter(tag => tag !== tagToRemove));
+  };
+
+  const handleFileChange = (e) => {
+    const files = Array.from(e.target.files);
+    const validFiles = files.filter(file => {
+      const isImage = file.type.startsWith('image/');
+      const isVideo = file.type.startsWith('video/');
+      const isValidSize = file.size <= 50 * 1024 * 1024; // 50MB limit
+      return (isImage || isVideo) && isValidSize;
+    });
+    
+    setMediaFiles([...mediaFiles, ...validFiles]);
+  };
+
+  const removeMediaFile = (indexToRemove) => {
+    setMediaFiles(mediaFiles.filter((_, index) => index !== indexToRemove));
+  };
+
+  const handleMetricChange = (key, value) => {
+    setMetrics({
+      ...metrics,
+      [key]: value
+    });
+  };
+
+  const validateForm = () => {
+    if (!content.trim()) {
+      setError('Please write something to share!');
+      return false;
+    }
+    if (content.length > 2000) {
+      setError('Post content must be less than 2000 characters.');
+      return false;
+    }
+    setError('');
+    return true;
   };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+    
+    if (!validateForm()) {
+      return;
+    }
+
     setIsSubmitting(true);
+    setError('');
 
-    const newPost = {
-      id: Date.now(),
-      user: {
-        id: user?.id || 1,
-        name: user?.name || 'You',
-        avatar: user?.profile_picture_url || 'https://via.placeholder.com/100',
-        verified: false,
-        title: 'Community Member'
-      },
-      type: postType,
-      content,
-      media: media.map(m => ({ url: m.url, type: m.type })),
-      metrics: Object.keys(metrics).length > 0 ? metrics : null,
-      tags: tags.split(' ').filter(tag => tag.startsWith('#')),
-      timestamp: 'Just now',
-      likes: 0,
-      loves: 0,
-      motivates: 0,
-      comments: 0,
-      shares: 0,
-      bookmarks: 0,
-      reactions: { liked: false, loved: false, motivated: false },
-      category: postType,
-      views: 0
-    };
+    try {
+      const postData = {
+        type: postType,
+        content: content.trim(),
+        hashtags: hashtags,
+        metrics: Object.keys(metrics).length > 0 ? metrics : null,
+        mediaFiles: mediaFiles
+      };
 
-    setTimeout(() => {
-      onSubmit(newPost);
+      const result = await createPost(postData);
+      
+      if (result.success) {
+        onPostCreated(result.data);
+        onClose();
+      } else {
+        setError(result.message || 'Failed to create post. Please try again.');
+      }
+    } catch (error) {
+      console.error('Error creating post:', error);
+      setError('An unexpected error occurred. Please try again.');
+    } finally {
       setIsSubmitting(false);
-    }, 1000);
+    }
   };
+
+  const currentPostType = postTypes.find(type => type.value === postType);
+  const metricFields = getMetricFields(postType);
 
   return (
     <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
-      <div className="bg-white rounded-2xl shadow-2xl w-full max-w-3xl max-h-[95vh] overflow-y-auto">
+      <div className="bg-white rounded-2xl max-w-2xl w-full max-h-[90vh] overflow-hidden">
         {/* Header */}
-        <div className="sticky top-0 bg-white px-6 py-4 border-b border-gray-100 rounded-t-2xl z-10">
-          <div className="flex items-center justify-between">
-            <h2 className="text-xl font-bold text-gray-900">Share Your Journey</h2>
-            <div className="flex items-center space-x-3">
-              <button
-                type="button"
-                onClick={generateAiSuggestions}
-                className="flex items-center space-x-2 bg-gradient-to-r from-purple-500 to-pink-600 text-white px-4 py-2 rounded-lg text-sm font-medium hover:shadow-lg transition-all"
-              >
-                <i className="fas fa-brain"></i>
-                <span>AI Assist</span>
-              </button>
-              <button
-                onClick={onClose}
-                className="p-2 hover:bg-gray-100 rounded-lg transition-colors"
-              >
-                <i className="fas fa-times text-gray-500"></i>
-              </button>
-            </div>
-          </div>
+        <div className="flex items-center justify-between p-6 border-b border-gray-200">
+          <h2 className="text-xl font-bold text-gray-900">Create Post</h2>
+          <button
+            onClick={onClose}
+            className="p-2 text-gray-400 hover:text-gray-600 rounded-lg hover:bg-gray-100 transition-colors"
+          >
+            <FontAwesomeIcon icon={faTimes} />
+          </button>
         </div>
 
-        <form onSubmit={handleSubmit} className="p-6 space-y-6">
-          {/* Post Type Selection */}
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-3">
-              Choose Category
-            </label>
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
-              {postTypes.map((type) => (
-                <button
-                  key={type.id}
-                  type="button"
-                  onClick={() => setPostType(type.id)}
-                  className={`p-4 rounded-xl border-2 transition-all text-left ${
-                    postType === type.id
-                      ? `border-${type.color}-500 bg-${type.color}-50`
-                      : 'border-gray-200 hover:border-gray-300'
-                  }`}
-                >
-                  <div className="flex items-center space-x-3 mb-2">
-                    <i className={`fas ${type.icon} text-lg ${
-                      postType === type.id ? `text-${type.color}-600` : 'text-gray-400'
-                    }`}></i>
-                    <div className={`font-medium ${
-                      postType === type.id ? `text-${type.color}-700` : 'text-gray-600'
-                    }`}>
-                      {type.name}
-                    </div>
-                  </div>
-                  <p className={`text-xs ${
-                    postType === type.id ? `text-${type.color}-600` : 'text-gray-500'
-                  }`}>
-                    {type.desc}
-                  </p>
-                </button>
-              ))}
-            </div>
-          </div>
+        <form onSubmit={handleSubmit} className="max-h-[70vh] overflow-y-auto">
+          <div className="p-6 space-y-6">
+            {/* Error Message */}
+            {error && (
+              <div className="bg-red-50 border border-red-200 rounded-lg p-4">
+                <p className="text-red-600 text-sm">{error}</p>
+              </div>
+            )}
 
-          {/* AI Suggestions Modal */}
-          {showAiSuggestions && (
-            <div className="bg-gradient-to-r from-purple-50 to-pink-50 rounded-xl p-4 border border-purple-200">
-              <div className="flex items-center space-x-2 mb-3">
-                <i className="fas fa-brain text-purple-600"></i>
-                <h3 className="font-medium text-purple-700">AI Suggestions</h3>
-                <button
-                  type="button"
-                  onClick={() => setShowAiSuggestions(false)}
-                  className="ml-auto text-purple-400 hover:text-purple-600"
-                >
-                  <i className="fas fa-times"></i>
-                </button>
+            {/* Post Type Selection */}
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-3">
+                Post Category
+              </label>
+              <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+                {postTypes.map((type) => (
+                  <button
+                    key={type.value}
+                    type="button"
+                    onClick={() => setPostType(type.value)}
+                    className={`p-3 rounded-lg border-2 transition-all duration-200 ${
+                      postType === type.value
+                        ? 'border-emerald-500 bg-emerald-50 text-emerald-700'
+                        : 'border-gray-200 hover:border-gray-300 text-gray-600'
+                    }`}
+                  >
+                    <div className="flex flex-col items-center space-y-2">
+                      <FontAwesomeIcon 
+                        icon={type.icon} 
+                        className={`text-lg ${postType === type.value ? 'text-emerald-600' : type.color}`}
+                      />
+                      <span className="text-xs font-medium">{type.label}</span>
+                    </div>
+                  </button>
+                ))}
+              </div>
+            </div>
+
+            {/* Content */}
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2">
+                What's on your mind?
+              </label>
+              <textarea
+                value={content}
+                onChange={(e) => setContent(e.target.value)}
+                placeholder={`Share your ${currentPostType?.label.toLowerCase()} journey with the community...`}
+                className="w-full p-4 border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 resize-none"
+                rows="4"
+                maxLength="2000"
+              />
+              <div className="flex justify-between items-center mt-2 text-sm text-gray-500">
+                <span>{content.length}/2000 characters</span>
+              </div>
+            </div>
+
+            {/* Media Upload */}
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2">
+                Add Media (Optional)
+              </label>
+              <div className="border-2 border-dashed border-gray-300 rounded-lg p-4">
+                <input
+                  ref={fileInputRef}
+                  type="file"
+                  multiple
+                  accept="image/*,video/*"
+                  onChange={handleFileChange}
+                  className="hidden"
+                />
+                <div className="text-center">
+                  <button
+                    type="button"
+                    onClick={() => fileInputRef.current?.click()}
+                    className="text-emerald-600 hover:text-emerald-700 font-medium"
+                  >
+                    <FontAwesomeIcon icon={faImage} className="mr-2" />
+                    Choose Images or Videos
+                  </button>
+                  <p className="text-sm text-gray-500 mt-1">
+                    Max file size: 50MB. Supported: JPG, PNG, MP4, MOV
+                  </p>
+                </div>
               </div>
               
-              <div className="space-y-3">
-                <div>
-                  <h4 className="text-sm font-medium text-purple-600 mb-2">Suggested Captions:</h4>
-                  <div className="space-y-2">
-                    {aiSuggestions.captions.map((caption, index) => (
-                      <button
-                        key={index}
-                        type="button"
-                        onClick={() => useSuggestedCaption(caption)}
-                        className="w-full text-left p-3 bg-white rounded-lg border border-purple-200 hover:border-purple-300 text-sm text-gray-700 transition-colors"
-                      >
-                        {caption}
-                      </button>
-                    ))}
-                  </div>
-                </div>
-                
-                <div>
-                  <h4 className="text-sm font-medium text-purple-600 mb-2">Suggested Hashtags:</h4>
-                  <div className="flex flex-wrap gap-2">
-                    {aiSuggestions.hashtags.map((tag) => (
-                      <button
-                        key={tag}
-                        type="button"
-                        onClick={() => addSuggestedTag(tag)}
-                        className="bg-purple-100 hover:bg-purple-200 text-purple-700 px-3 py-1 rounded-full text-sm transition-colors"
-                      >
-                        {tag}
-                      </button>
-                    ))}
-                  </div>
-                </div>
-              </div>
-            </div>
-          )}
-
-          {/* Content */}
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">
-              Share your story
-            </label>
-            <textarea
-              value={content}
-              onChange={(e) => setContent(e.target.value)}
-              placeholder="What's on your mind? Share your wellness journey, tips, or achievements..."
-              className="w-full h-32 p-4 border border-gray-300 rounded-xl resize-none focus:ring-2 focus:ring-emerald-500 focus:border-transparent"
-              required
-            />
-          </div>
-
-          {/* Media Upload */}
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">
-              Add photos or videos
-            </label>
-            <div className="space-y-4">
-              {/* Upload Button */}
-              <div className="flex space-x-2">
-                <label className="flex-1 flex flex-col items-center justify-center h-32 border-2 border-gray-300 border-dashed rounded-xl cursor-pointer hover:bg-gray-50">
-                  <div className="flex flex-col items-center justify-center pt-5 pb-6">
-                    <i className="fas fa-camera text-gray-400 text-2xl mb-2"></i>
-                    <p className="text-sm text-gray-500">Photos (JPG, PNG, GIF)</p>
-                  </div>
-                  <input
-                    ref={fileInputRef}
-                    type="file"
-                    accept="image/*"
-                    multiple
-                    onChange={handleMediaUpload}
-                    className="hidden"
-                  />
-                </label>
-                
-                <label className="flex-1 flex flex-col items-center justify-center h-32 border-2 border-gray-300 border-dashed rounded-xl cursor-pointer hover:bg-gray-50">
-                  <div className="flex flex-col items-center justify-center pt-5 pb-6">
-                    <i className="fas fa-video text-gray-400 text-2xl mb-2"></i>
-                    <p className="text-sm text-gray-500">Videos (MP4, MOV)</p>
-                  </div>
-                  <input
-                    type="file"
-                    accept="video/*"
-                    multiple
-                    onChange={handleMediaUpload}
-                    className="hidden"
-                  />
-                </label>
-              </div>
-
-              {/* Media Preview */}
-              {media.length > 0 && (
-                <div className="grid grid-cols-2 sm:grid-cols-3 gap-4">
-                  {media.map((item, index) => (
+              {mediaFiles.length > 0 && (
+                <div className="mt-4 grid grid-cols-2 sm:grid-cols-3 gap-4">
+                  {mediaFiles.map((file, index) => (
                     <div key={index} className="relative">
-                      {item.type === 'video' ? (
-                        <video
-                          src={item.url}
-                          className="w-full h-24 object-cover rounded-lg"
-                          controls
-                        />
-                      ) : (
-                        <img
-                          src={item.url}
-                          alt={`Upload ${index + 1}`}
-                          className="w-full h-24 object-cover rounded-lg"
-                        />
-                      )}
+                      <div className="aspect-square bg-gray-100 rounded-lg flex items-center justify-center">
+                        {file.type.startsWith('image/') ? (
+                          <img
+                            src={URL.createObjectURL(file)}
+                            alt="Preview"
+                            className="w-full h-full object-cover rounded-lg"
+                          />
+                        ) : (
+                          <div className="text-center">
+                            <FontAwesomeIcon icon={faVideo} className="text-2xl text-gray-400 mb-2" />
+                            <p className="text-xs text-gray-500">{file.name}</p>
+                          </div>
+                        )}
+                      </div>
                       <button
                         type="button"
-                        onClick={() => removeMedia(index)}
-                        className="absolute -top-2 -right-2 w-6 h-6 bg-red-500 text-white rounded-full flex items-center justify-center text-xs hover:bg-red-600"
+                        onClick={() => removeMediaFile(index)}
+                        className="absolute -top-2 -right-2 w-6 h-6 bg-red-500 text-white rounded-full flex items-center justify-center hover:bg-red-600 transition-colors"
                       >
-                        ×
+                        <FontAwesomeIcon icon={faTimes} className="text-xs" />
                       </button>
-                      <div className="absolute bottom-1 left-1 bg-black bg-opacity-50 text-white text-xs px-2 py-1 rounded">
-                        {item.type === 'video' ? 'VIDEO' : 'PHOTO'}
-                      </div>
                     </div>
                   ))}
                 </div>
               )}
             </div>
-          </div>
 
-          {/* Metrics */}
-          {metricFields[postType] && (
+            {/* Dynamic Metrics */}
+            {metricFields.length > 0 && (
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-3">
+                  {currentPostType?.label} Details (Optional)
+                </label>
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                  {metricFields.map((field) => (
+                    <div key={field.key}>
+                      <label className="block text-sm text-gray-600 mb-1">
+                        {field.label}
+                      </label>
+                      {field.type === 'select' ? (
+                        <select
+                          value={metrics[field.key] || ''}
+                          onChange={(e) => handleMetricChange(field.key, e.target.value)}
+                          className="w-full p-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500"
+                        >
+                          <option value="">Select...</option>
+                          {field.options.map((option) => (
+                            <option key={option} value={option}>
+                              {option}
+                            </option>
+                          ))}
+                        </select>
+                      ) : (
+                        <input
+                          type={field.type}
+                          value={metrics[field.key] || ''}
+                          onChange={(e) => handleMetricChange(field.key, e.target.value)}
+                          placeholder={field.placeholder}
+                          min={field.min}
+                          max={field.max}
+                          className="w-full p-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500"
+                        />
+                      )}
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
+
+            {/* Hashtags */}
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-3">
-                Add metrics (optional)
+              <label className="block text-sm font-medium text-gray-700 mb-2">
+                Hashtags
               </label>
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                {metricFields[postType].map((field) => (
-                  <div key={field.key}>
-                    <label className="block text-xs text-gray-500 mb-1">
-                      {field.label}
-                    </label>
-                    <input
-                      type="text"
-                      placeholder={field.placeholder}
-                      value={metrics[field.key] || ''}
-                      onChange={(e) => handleMetricChange(field.key, e.target.value)}
-                      className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-transparent"
-                    />
-                  </div>
+              <div className="flex flex-wrap gap-2 mb-3">
+                {hashtags.map((tag) => (
+                  <span
+                    key={tag}
+                    className="bg-emerald-100 text-emerald-800 px-3 py-1 rounded-full text-sm flex items-center space-x-2"
+                  >
+                    <span>#{tag}</span>
+                    <button
+                      type="button"
+                      onClick={() => removeHashtag(tag)}
+                      className="text-emerald-600 hover:text-emerald-800"
+                    >
+                      <FontAwesomeIcon icon={faTimes} className="text-xs" />
+                    </button>
+                  </span>
                 ))}
               </div>
-            </div>
-          )}
-
-          {/* Tags */}
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">
-              Hashtags
-            </label>
-            <input
-              type="text"
-              value={tags}
-              onChange={(e) => setTags(e.target.value)}
-              placeholder="#fitness #nutrition #wellness"
-              className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-transparent"
-            />
-            
-            {/* Suggested Tags */}
-            {suggestedTags[postType] && (
-              <div className="mt-2">
-                <p className="text-xs text-gray-500 mb-2">Suggested tags:</p>
+              
+              <div className="flex space-x-2">
+                <input
+                  type="text"
+                  value={hashtagInput}
+                  onChange={(e) => setHashtagInput(e.target.value)}
+                  onKeyPress={handleHashtagKeyPress}
+                  placeholder="Add hashtag..."
+                  className="flex-1 p-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500"
+                />
+                <button
+                  type="button"
+                  onClick={() => handleAddHashtag(hashtagInput)}
+                  disabled={!hashtagInput.trim()}
+                  className="px-4 py-2 bg-emerald-600 text-white rounded-lg hover:bg-emerald-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                >
+                  <FontAwesomeIcon icon={faHashtag} />
+                </button>
+              </div>
+              
+              {/* Suggested Hashtags */}
+              <div className="mt-3">
+                <p className="text-xs text-gray-500 mb-2">Suggested:</p>
                 <div className="flex flex-wrap gap-2">
-                  {suggestedTags[postType].map((tag) => (
+                  {suggestedHashtags[postType]?.map((tag) => (
                     <button
                       key={tag}
                       type="button"
-                      onClick={() => addSuggestedTag(tag)}
-                      className="bg-gray-100 hover:bg-emerald-50 text-gray-600 hover:text-emerald-700 px-3 py-1 rounded-full text-sm transition-colors"
+                      onClick={() => handleAddHashtag(tag.slice(1))}
+                      disabled={hashtags.includes(tag.slice(1))}
+                      className="text-xs bg-gray-100 text-gray-600 px-2 py-1 rounded-full hover:bg-gray-200 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
                     >
                       {tag}
                     </button>
                   ))}
                 </div>
               </div>
-            )}
+            </div>
           </div>
 
-          {/* Submit Button */}
-          <div className="flex items-center justify-end space-x-4 pt-4 border-t border-gray-100">
-            <button
-              type="button"
-              onClick={onClose}
-              className="px-6 py-2 text-gray-600 hover:text-gray-700 transition-colors"
-            >
-              Cancel
-            </button>
-            <button
-              type="submit"
-              disabled={!content.trim() || isSubmitting}
-              className="bg-gradient-to-r from-emerald-500 to-teal-600 text-white px-8 py-3 rounded-xl font-medium hover:shadow-lg transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed flex items-center space-x-2"
-            >
-              {isSubmitting ? (
-                <>
-                  <i className="fas fa-spinner animate-spin"></i>
-                  <span>Sharing...</span>
-                </>
-              ) : (
-                <>
-                  <i className="fas fa-share"></i>
-                  <span>Share Post</span>
-                </>
-              )}
-            </button>
+          {/* Footer */}
+          <div className="flex items-center justify-between p-6 border-t border-gray-200 bg-gray-50">
+            <div className="text-sm text-gray-500">
+              <FontAwesomeIcon icon={faSmile} className="mr-2" />
+              Share your journey with the community
+            </div>
+            <div className="flex items-center space-x-3">
+              <button
+                type="button"
+                onClick={onClose}
+                className="px-4 py-2 text-gray-600 hover:text-gray-800 transition-colors"
+              >
+                Cancel
+              </button>
+              <button
+                type="submit"
+                disabled={isSubmitting || !content.trim()}
+                className="px-6 py-2 bg-emerald-600 text-white rounded-lg hover:bg-emerald-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors flex items-center space-x-2"
+              >
+                {isSubmitting ? (
+                  <>
+                    <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></div>
+                    <span>Posting...</span>
+                  </>
+                ) : (
+                  <>
+                    <FontAwesomeIcon icon={faPaperPlane} />
+                    <span>Post</span>
+                  </>
+                )}
+              </button>
+            </div>
           </div>
         </form>
       </div>

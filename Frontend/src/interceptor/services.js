@@ -253,3 +253,314 @@ export const deleteUserAccount = async () => {
     };
   }
 };
+
+// ===================== SOCIAL MEDIA SERVICES =====================
+
+// ======== POST SERVICES ========
+export const getPosts = async (params = {}) => {
+  try {
+    const queryParams = new URLSearchParams(params).toString();
+    const res = await interceptors.get(`social_media/posts/?${queryParams}`);
+    return {
+      success: true,
+      data: res.data,
+    };
+  } catch (error) {
+    console.error("Get Posts error:", error.response?.data || error);
+    return {
+      success: false,
+      message: error.response?.data?.message || "Failed to fetch posts.",
+      error: error.response?.data || error,
+    };
+  }
+};
+
+export const createPost = async (postData) => {
+  try {
+    const formData = new FormData();
+    
+    // Add basic post data
+    formData.append('type', postData.type || 'general');
+    formData.append('content', postData.content);
+    
+    // Add hashtags
+    if (postData.hashtags && postData.hashtags.length > 0) {
+      postData.hashtags.forEach(tag => {
+        formData.append('hashtags', tag);
+      });
+    }
+    
+    // Add metrics data
+    if (postData.metrics) {
+      formData.append('metrics_data', JSON.stringify(postData.metrics));
+    }
+    
+    // Add media files
+    if (postData.mediaFiles && postData.mediaFiles.length > 0) {
+      postData.mediaFiles.forEach(file => {
+        formData.append('media_files', file);
+      });
+    }
+    
+    const res = await interceptors.post("social_media/posts/create/", formData, {
+      headers: {
+        'Content-Type': 'multipart/form-data',
+      },
+    });
+    
+    return {
+      success: true,
+      data: res.data,
+      message: "Post created successfully!",
+    };
+  } catch (error) {
+    console.error("Create Post error:", error.response?.data || error);
+    return {
+      success: false,
+      message: error.response?.data?.message || "Failed to create post.",
+      error: error.response?.data || error,
+    };
+  }
+};
+
+export const toggleReaction = async (postId, reactionType) => {
+  try {
+    const res = await interceptors.post(`social_media/posts/${postId}/reaction/`, {
+      reaction_type: reactionType
+    });
+    return {
+      success: true,
+      message: res.data.message,
+    };
+  } catch (error) {
+    console.error("Toggle Reaction error:", error.response?.data || error);
+    return {
+      success: false,
+      message: error.response?.data?.message || "Failed to update reaction.",
+      error: error.response?.data || error,
+    };
+  }
+};
+
+export const toggleBookmark = async (postId) => {
+  try {
+    const res = await interceptors.post(`social_media/posts/${postId}/bookmark/`);
+    return {
+      success: true,
+      message: res.data.message,
+      bookmarked: res.data.bookmarked,
+    };
+  } catch (error) {
+    console.error("Toggle Bookmark error:", error.response?.data || error);
+    return {
+      success: false,
+      message: error.response?.data?.message || "Failed to update bookmark.",
+      error: error.response?.data || error,
+    };
+  }
+};
+
+export const sharePost = async (postId) => {
+  try {
+    const res = await interceptors.post(`social_media/posts/${postId}/share/`);
+    return {
+      success: true,
+      message: res.data.message,
+    };
+  } catch (error) {
+    console.error("Share Post error:", error.response?.data || error);
+    return {
+      success: false,
+      message: error.response?.data?.message || "Failed to share post.",
+      error: error.response?.data || error,
+    };
+  }
+};
+
+// ======== COMMENT SERVICES ========
+export const getPostComments = async (postId, page = 1) => {
+  try {
+    const res = await interceptors.get(`social_media/posts/${postId}/comments/?page=${page}`);
+    return {
+      success: true,
+      data: res.data,
+    };
+  } catch (error) {
+    console.error("Get Comments error:", error.response?.data || error);
+    return {
+      success: false,
+      message: error.response?.data?.message || "Failed to fetch comments.",
+      error: error.response?.data || error,
+    };
+  }
+};
+
+export const createComment = async (postId, content, parentId = null) => {
+  try {
+    const data = { content };
+    if (parentId) {
+      data.parent_id = parentId;
+    }
+    
+    const res = await interceptors.post(`social_media/posts/${postId}/comments/create/`, data);
+    return {
+      success: true,
+      data: res.data,
+      message: "Comment added successfully!",
+    };
+  } catch (error) {
+    console.error("Create Comment error:", error.response?.data || error);
+    return {
+      success: false,
+      message: error.response?.data?.message || "Failed to add comment.",
+      error: error.response?.data || error,
+    };
+  }
+};
+
+// ======== FOLLOW SERVICES ========
+export const toggleFollow = async (userId) => {
+  try {
+    const res = await interceptors.post(`social_media/users/${userId}/follow/`);
+    return {
+      success: true,
+      message: res.data.message,
+      following: res.data.following,
+    };
+  } catch (error) {
+    console.error("Toggle Follow error:", error.response?.data || error);
+    return {
+      success: false,
+      message: error.response?.data?.message || "Failed to update follow status.",
+      error: error.response?.data || error,
+    };
+  }
+};
+
+export const getSuggestedUsers = async () => {
+  try {
+    const res = await interceptors.get("social_media/users/suggested/");
+    return {
+      success: true,
+      data: res.data,
+    };
+  } catch (error) {
+    console.error("Get Suggested Users error:", error.response?.data || error);
+    return {
+      success: false,
+      message: error.response?.data?.message || "Failed to fetch suggested users.",
+      error: error.response?.data || error,
+    };
+  }
+};
+
+// ======== COMMUNITY SERVICES ========
+export const getCommunityStats = async () => {
+  try {
+    const res = await interceptors.get("social_media/community/stats/");
+    return {
+      success: true,
+      data: res.data,
+    };
+  } catch (error) {
+    console.error("Get Community Stats error:", error.response?.data || error);
+    return {
+      success: false,
+      message: error.response?.data?.message || "Failed to fetch community stats.",
+      error: error.response?.data || error,
+    };
+  }
+};
+
+export const getTrendingTopics = async () => {
+  try {
+    const res = await interceptors.get("social_media/community/trending/");
+    return {
+      success: true,
+      data: res.data,
+    };
+  } catch (error) {
+    console.error("Get Trending Topics error:", error.response?.data || error);
+    return {
+      success: false,
+      message: error.response?.data?.message || "Failed to fetch trending topics.",
+      error: error.response?.data || error,
+    };
+  }
+};
+
+// ======== DISCOVER SERVICES ========
+export const discoverPosts = async (params = {}) => {
+  try {
+    const queryParams = new URLSearchParams(params).toString();
+    const res = await interceptors.get(`social_media/discover/?${queryParams}`);
+    return {
+      success: true,
+      data: res.data,
+    };
+  } catch (error) {
+    console.error("Discover Posts error:", error.response?.data || error);
+    return {
+      success: false,
+      message: error.response?.data?.message || "Failed to discover posts.",
+      error: error.response?.data || error,
+    };
+  }
+};
+
+// ======== NOTIFICATION SERVICES ========
+export const getNotifications = async (markReadIds = []) => {
+  try {
+    let url = "social_media/notifications/";
+    if (markReadIds.length > 0) {
+      url += `?mark_read=${markReadIds.join(',')}`;
+    }
+    
+    const res = await interceptors.get(url);
+    return {
+      success: true,
+      data: res.data,
+    };
+  } catch (error) {
+    console.error("Get Notifications error:", error.response?.data || error);
+    return {
+      success: false,
+      message: error.response?.data?.message || "Failed to fetch notifications.",
+      error: error.response?.data || error,
+    };
+  }
+};
+
+export const getUnreadNotificationCount = async () => {
+  try {
+    const res = await interceptors.get("social_media/notifications/unread-count/");
+    return {
+      success: true,
+      data: res.data,
+    };
+  } catch (error) {
+    console.error("Get Unread Count error:", error.response?.data || error);
+    return {
+      success: false,
+      message: error.response?.data?.message || "Failed to fetch unread count.",
+      error: error.response?.data || error,
+    };
+  }
+};
+
+// ======== REAL-TIME UPDATES ========
+export const setupRealTimeUpdates = (onUpdate) => {
+  // Polling for real-time updates (can be replaced with WebSocket later)
+  const intervalId = setInterval(async () => {
+    try {
+      const result = await getUnreadNotificationCount();
+      if (result.success) {
+        onUpdate(result.data);
+      }
+    } catch (error) {
+      console.error("Real-time update error:", error);
+    }
+  }, 30000); // Poll every 30 seconds
+  
+  return () => clearInterval(intervalId); // Return cleanup function
+};
