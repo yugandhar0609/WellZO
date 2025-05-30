@@ -19,6 +19,16 @@ const Dashboard = () => {
   const [showImageUpload, setShowImageUpload] = useState(false);
   const [bodyImages, setBodyImages] = useState([]);
   const [selectedImageType, setSelectedImageType] = useState('front');
+  const [showAIChat, setShowAIChat] = useState(false);
+  const [chatMessages, setChatMessages] = useState([
+    {
+      role: 'assistant',
+      content: 'Hello! I\'m your personal AI health assistant. I can help you with nutrition advice, workout planning, health insights, and answer any wellness questions you have. How can I assist you today?',
+      timestamp: new Date()
+    }
+  ]);
+  const [chatInput, setChatInput] = useState('');
+  const [isAITyping, setIsAITyping] = useState(false);
 
   // Load saved data from localStorage on component mount
   useEffect(() => {
@@ -298,6 +308,43 @@ const Dashboard = () => {
     return null;
   }
 
+  // Handle AI chat
+  const handleSendChatMessage = () => {
+    if (!chatInput.trim()) return;
+
+    const userMessage = {
+      role: 'user',
+      content: chatInput,
+      timestamp: new Date()
+    };
+
+    setChatMessages(prev => [...prev, userMessage]);
+    setChatInput('');
+    setIsAITyping(true);
+
+    // Simulate AI response
+    setTimeout(() => {
+      const aiResponses = [
+        "Based on your current health metrics, I recommend increasing your protein intake by 15g daily to support your muscle building goals.",
+        "I can see you're making great progress! Your consistency with workouts is impressive. Have you considered adding some flexibility training?",
+        "Your calorie tracking shows you're on the right path. Would you like me to suggest some nutrient-dense meal options for tomorrow?",
+        "I notice your water intake has been consistent. That's excellent for recovery and overall health. Keep it up!",
+        "Your sleep quality metrics suggest adding 30 minutes of evening stretching could improve your rest. Would you like a routine?",
+      ];
+
+      const randomResponse = aiResponses[Math.floor(Math.random() * aiResponses.length)];
+
+      const aiMessage = {
+        role: 'assistant',
+        content: randomResponse,
+        timestamp: new Date()
+      };
+
+      setChatMessages(prev => [...prev, aiMessage]);
+      setIsAITyping(false);
+    }, 1500);
+  };
+
   return (
     <div className="min-h-screen bg-gradient-to-br from-gray-50 via-white to-gray-100">
       {/* Profile Completion Banner */}
@@ -426,15 +473,15 @@ const Dashboard = () => {
               </div>
             </div>
             <div className="flex items-center space-x-4">
-              <select 
-                value={selectedPeriod}
-                onChange={(e) => setSelectedPeriod(e.target.value)}
-                className="hidden sm:block bg-gradient-to-r from-emerald-50 to-teal-50 text-emerald-700 px-4 py-2 rounded-xl border border-emerald-200 focus:outline-none focus:ring-2 focus:ring-emerald-500 font-medium"
+              <button 
+                onClick={() => setShowAIChat(true)}
+                className="hidden sm:flex items-center space-x-2 bg-gradient-to-r from-purple-500 to-indigo-600 text-white px-4 py-2 rounded-xl font-medium hover:shadow-lg transition-all duration-300 hover:-translate-y-0.5"
               >
-                <option value="week">This Week</option>
-                <option value="month">This Month</option>
-                <option value="quarter">Last 3 Months</option>
-              </select>
+                <div className="w-6 h-6 bg-white/20 rounded-lg flex items-center justify-center">
+                  <span className="text-sm">🤖</span>
+                </div>
+                <span>Smart AI</span>
+              </button>
               
               {/* Desktop Profile Quick Access */}
               <div className="hidden lg:flex items-center space-x-3">
@@ -1573,6 +1620,190 @@ const Dashboard = () => {
                       <li>• Take photos at the same time of day</li>
                     </ul>
                   </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* AI Chat Interface */}
+      {showAIChat && (
+        <div className="fixed inset-0 bg-black/60 backdrop-blur-md z-50 flex items-center justify-center p-4">
+          <div className="bg-white/95 backdrop-blur-xl rounded-3xl shadow-2xl w-full max-w-5xl h-[85vh] flex flex-col border border-white/20">
+            {/* Chat Header */}
+            <div className="flex items-center justify-between p-6 border-b border-gray-200/50 bg-gradient-to-r from-purple-50/50 to-indigo-50/50 rounded-t-3xl">
+              <div className="flex items-center space-x-4">
+                <div className="relative">
+                  <div className="w-12 h-12 bg-gradient-to-br from-purple-500 via-indigo-600 to-purple-700 rounded-2xl flex items-center justify-center shadow-lg">
+                    <span className="text-2xl">🤖</span>
+                  </div>
+                  <div className="absolute -top-1 -right-1 w-4 h-4 bg-green-500 rounded-full border-2 border-white animate-pulse"></div>
+                </div>
+                <div>
+                  <h3 className="text-xl font-bold text-gray-900">WellZO AI</h3>
+                  <p className="text-sm text-gray-600 font-medium">Personal Health Intelligence</p>
+                </div>
+              </div>
+              <div className="flex items-center space-x-3">
+                <div className="hidden sm:flex items-center space-x-2 bg-green-100 text-green-700 px-3 py-1 rounded-full text-xs font-semibold">
+                  <div className="w-2 h-2 bg-green-500 rounded-full animate-pulse"></div>
+                  Online
+                </div>
+                <button 
+                  onClick={() => setShowAIChat(false)}
+                  className="p-2 rounded-xl hover:bg-gray-100 transition-all duration-200 group"
+                >
+                  <i className="fas fa-times text-gray-500 group-hover:text-gray-700 text-lg"></i>
+                </button>
+              </div>
+            </div>
+
+            {/* Chat Messages */}
+            <div className="flex-1 overflow-y-auto p-6 space-y-6 bg-gradient-to-b from-gray-50/30 to-white/50">
+              {chatMessages.map((message, index) => (
+                <div key={index} className={`flex ${message.role === 'user' ? 'justify-end' : 'justify-start'}`}>
+                  {message.role === 'assistant' && (
+                    <div className="flex items-start space-x-3 max-w-[80%]">
+                      <div className="w-8 h-8 bg-gradient-to-br from-purple-500 to-indigo-600 rounded-xl flex items-center justify-center shadow-md flex-shrink-0 mt-1">
+                        <span className="text-white text-sm">🤖</span>
+                      </div>
+                      <div className="flex-1">
+                        <div className="flex items-center space-x-2 mb-2">
+                          <span className="text-sm font-semibold text-gray-900">WellZO AI</span>
+                          <span className="text-xs text-gray-500 font-medium">
+                            {message.timestamp.toLocaleTimeString()}
+                          </span>
+                        </div>
+                        <div className="bg-white/80 backdrop-blur-sm rounded-2xl rounded-tl-lg p-4 shadow-sm border border-gray-200/50">
+                          <p className="text-gray-800 leading-relaxed text-sm">{message.content}</p>
+                        </div>
+                      </div>
+                    </div>
+                  )}
+                  
+                  {message.role === 'user' && (
+                    <div className="flex items-start space-x-3 max-w-[80%]">
+                      <div className="flex-1 text-right">
+                        <div className="flex items-center justify-end space-x-2 mb-2">
+                          <span className="text-xs text-gray-500 font-medium">
+                            {message.timestamp.toLocaleTimeString()}
+                          </span>
+                          <span className="text-sm font-semibold text-gray-900">You</span>
+                        </div>
+                        <div className="bg-gradient-to-r from-emerald-500 to-teal-600 rounded-2xl rounded-tr-lg p-4 shadow-md">
+                          <p className="text-white leading-relaxed text-sm">{message.content}</p>
+                        </div>
+                      </div>
+                      <img
+                        src={userAvatar}
+                        alt="You"
+                        className="w-8 h-8 rounded-xl border-2 border-emerald-500 object-cover shadow-md flex-shrink-0 mt-1"
+                      />
+                    </div>
+                  )}
+                </div>
+              ))}
+
+              {/* AI Typing Indicator */}
+              {isAITyping && (
+                <div className="flex justify-start">
+                  <div className="flex items-start space-x-3 max-w-[80%]">
+                    <div className="w-8 h-8 bg-gradient-to-br from-purple-500 to-indigo-600 rounded-xl flex items-center justify-center shadow-md flex-shrink-0">
+                      <span className="text-white text-sm">🤖</span>
+                    </div>
+                    <div className="flex-1">
+                      <div className="flex items-center space-x-2 mb-2">
+                        <span className="text-sm font-semibold text-gray-900">WellZO AI</span>
+                        <span className="text-xs text-gray-500 font-medium">thinking...</span>
+                      </div>
+                      <div className="bg-white/80 backdrop-blur-sm rounded-2xl rounded-tl-lg p-4 shadow-sm border border-gray-200/50">
+                        <div className="flex items-center space-x-2">
+                          <div className="w-2 h-2 bg-purple-500 rounded-full animate-bounce"></div>
+                          <div className="w-2 h-2 bg-purple-500 rounded-full animate-bounce" style={{ animationDelay: '0.2s' }}></div>
+                          <div className="w-2 h-2 bg-purple-500 rounded-full animate-bounce" style={{ animationDelay: '0.4s' }}></div>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              )}
+            </div>
+
+            {/* Chat Input */}
+            <div className="p-6 border-t border-gray-200/50 bg-gradient-to-r from-gray-50/30 to-white/50 rounded-b-3xl">
+              {/* Quick Actions */}
+              <div className="flex flex-wrap gap-2 mb-4">
+                <button 
+                  onClick={() => setChatInput("What should I eat for lunch today based on my goals?")}
+                  className="bg-gradient-to-r from-emerald-50 to-emerald-100 text-emerald-700 px-4 py-2 rounded-xl text-sm font-medium hover:shadow-md hover:scale-105 transition-all duration-200 border border-emerald-200"
+                >
+                  <span className="mr-2">🍽️</span>Meal Planning
+                </button>
+                <button 
+                  onClick={() => setChatInput("Create a personalized workout plan for today")}
+                  className="bg-gradient-to-r from-orange-50 to-orange-100 text-orange-700 px-4 py-2 rounded-xl text-sm font-medium hover:shadow-md hover:scale-105 transition-all duration-200 border border-orange-200"
+                >
+                  <span className="mr-2">💪</span>Workout Plan
+                </button>
+                <button 
+                  onClick={() => setChatInput("Analyze my health progress and give insights")}
+                  className="bg-gradient-to-r from-blue-50 to-blue-100 text-blue-700 px-4 py-2 rounded-xl text-sm font-medium hover:shadow-md hover:scale-105 transition-all duration-200 border border-blue-200"
+                >
+                  <span className="mr-2">📊</span>Health Insights
+                </button>
+                <button 
+                  onClick={() => setChatInput("Give me tips for better sleep and recovery")}
+                  className="bg-gradient-to-r from-purple-50 to-purple-100 text-purple-700 px-4 py-2 rounded-xl text-sm font-medium hover:shadow-md hover:scale-105 transition-all duration-200 border border-purple-200"
+                >
+                  <span className="mr-2">😴</span>Sleep Tips
+                </button>
+              </div>
+
+              <div className="flex items-end space-x-4">
+                <div className="flex-1 relative">
+                  <div className="relative">
+                    <textarea
+                      value={chatInput}
+                      onChange={(e) => setChatInput(e.target.value)}
+                      placeholder="Ask me anything about your health, nutrition, workouts, or wellness goals..."
+                      className="w-full bg-white/80 backdrop-blur-sm border-2 border-gray-200 rounded-2xl px-6 py-4 pr-16 resize-none focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent transition-all duration-200 text-sm leading-relaxed shadow-sm"
+                      rows="1"
+                      style={{ minHeight: '56px', maxHeight: '120px' }}
+                      onKeyDown={(e) => {
+                        if (e.key === 'Enter' && !e.shiftKey) {
+                          e.preventDefault();
+                          handleSendChatMessage();
+                        }
+                      }}
+                    />
+                    <div className="absolute right-3 top-1/2 transform -translate-y-1/2 flex items-center space-x-2">
+                      <button className="text-gray-400 hover:text-purple-600 transition-colors p-1">
+                        <i className="fas fa-microphone text-sm"></i>
+                      </button>
+                      <button className="text-gray-400 hover:text-purple-600 transition-colors p-1">
+                        <i className="fas fa-paperclip text-sm"></i>
+                      </button>
+                    </div>
+                  </div>
+                </div>
+                <button 
+                  onClick={handleSendChatMessage}
+                  disabled={!chatInput.trim() || isAITyping}
+                  className="bg-gradient-to-r from-purple-500 to-indigo-600 text-white p-4 rounded-2xl hover:shadow-lg hover:scale-105 transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none group"
+                >
+                  <i className="fas fa-paper-plane text-sm group-hover:translate-x-0.5 group-hover:-translate-y-0.5 transition-transform"></i>
+                </button>
+              </div>
+              
+              <div className="flex items-center justify-between mt-3 text-xs text-gray-500">
+                <span>Press Enter to send, Shift + Enter for new line</span>
+                <div className="flex items-center space-x-4">
+                  <span className="flex items-center space-x-1">
+                    <div className="w-2 h-2 bg-green-500 rounded-full"></div>
+                    <span>AI Online</span>
+                  </span>
+                  <span>Powered by WellZO Intelligence</span>
                 </div>
               </div>
             </div>
