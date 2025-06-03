@@ -10,8 +10,10 @@ import {
   RiLineChartLine,
   RiRestaurant2Line 
 } from 'react-icons/ri';
+import { useNavigate } from 'react-router-dom';
 
 const MainContent = () => {
+  const navigate = useNavigate();
   const handleAnimationComplete = () => {
     console.log('All letters have animated!');
   };
@@ -60,7 +62,7 @@ const MainContent = () => {
                 <div className="flex flex-col sm:flex-row space-y-4 sm:space-y-0 sm:space-x-4" data-aos="fade-up" data-aos-delay="300">
                   <button 
                     className="w-full sm:w-auto bg-primary-600 text-white px-6 sm:px-8 py-3 rounded-full hover:bg-primary-700 shadow-lg transition-transform hover:scale-105 active:scale-95"
-                    onClick={() => scrollToSection('early-access')}
+                    onClick={() => navigate('/login')}
                     data-aos="zoom-in" 
                     data-aos-delay="400"
                   >
@@ -315,7 +317,7 @@ const MainContent = () => {
             <p className="text-xl mb-8 max-w-3xl mx-auto">Join thousands of users who have made healthy eating simple with Wellzo.ai.</p>
             <button 
               className="bg-white text-primary-600 px-8 py-3 rounded-full font-semibold hover:bg-gray-100 transition-transform hover:scale-105 active:scale-95"
-              onClick={() => scrollToSection('early-access')}
+              onClick={() => navigate('/login')}
             >
               Get Started for Free
             </button>

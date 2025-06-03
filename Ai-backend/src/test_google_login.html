@@ -1,67 +1,191 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
-    <title>Test Google Login</title>
-    <script src="https://accounts.google.com/gsi/client" async defer></script>
-    <style>
-        pre {
-            white-space: pre-wrap;
-            word-wrap: break-word;
-            max-width: 800px;
-        }
-    </style>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Fitness Dashboard</title>
+    <script src="https://cdn.tailwindcss.com"></script>
 </head>
-<body>
-    <h1>Test Google Login</h1>
-    
-    <div id="g_id_onload"
-         data-client_id="135364972111-4bt8afql29ocd80e5q6c97jle56ics7g.apps.googleusercontent.com"
-         data-callback="handleCredentialResponse"
-         data-auto_prompt="false"
-         data-ux_mode="popup">
-    </div>
-    <div class="g_id_signin"
-         data-type="standard"
-         data-size="large"
-         data-theme="outline"
-         data-text="sign_in_with"
-         data-shape="rectangular"
-         data-logo_alignment="left">
+<body class="flex h-screen bg-gray-100 font-sans">
+    <!-- Sidebar (Left) -->
+    <div class="w-64 bg-white shadow-md flex flex-col justify-between">
+        <div>
+            <nav class="mt-5">
+                <a href="#" data-page="home" class="flex items-center px-6 py-3 bg-green-100 text-green-600 sidebar-link">
+                    <span class="mr-3">🏠</span> Home
+                </a>
+                <a href="#" data-page="search" class="flex items-center px-6 py-3 text-gray-600 hover:bg-gray-100 sidebar-link">
+                    <span class="mr-3">🔍</span> Search
+                </a>
+                <a href="#" data-page="community" class="flex items-center px-6 py-3 text-gray-600 hover:bg-gray-100 sidebar-link">
+                    <span class="mr-3">👥</span> Community
+                </a>
+                <a href="#" data-page="marketplace" class="flex items-center px-6 py-3 text-gray-600 hover:bg-gray-100 sidebar-link">
+                    <span class="mr-3">🛒</span> Marketplace
+                </a>
+            </nav>
+        </div>
+        <div class="p-6 flex items-center">
+            <img src="https://via.placeholder.com/40" alt="Profile" class="w-10 h-10 rounded-full mr-3">
+            <div>
+                <p class="font-semibold">Jaya Surya</p>
+                <a href="#" class="text-red-500 flex items-center">
+                    <span class="mr-1">⬅</span> Logout
+                </a>
+            </div>
+        </div>
     </div>
 
-    <div id="token-display"></div>
-    <div id="response-display"></div>
+    <!-- Main Content -->
+    <div class="flex-1 p-8 overflow-y-auto">
+        <div class="flex justify-between items-center mb-4">
+            <h1 class="text-3xl font-bold">Dashboard</h1>
+            <div class="flex items-center">
+                <span class="mr-2">John Doe</span>
+                <span class="bg-green-200 text-green-800 text-xs font-semibold px-2.5 py-0.5 rounded">Premium Member</span>
+            </div>
+        </div>
+
+        <!-- Sub-Navigation Bar (Visible only on Home page) -->
+        <div id="sub-nav" class="mb-6">
+            <nav class="flex space-x-4 border-b border-gray-200">
+                <a href="#" class="pb-2 px-1 text-green-600 border-b-2 border-green-600">Analytics</a>
+                <a href="#" class="pb-2 px-1 text-gray-600 hover:text-green-600">Meals</a>
+                <a href="#" class="pb-2 px-1 text-gray-600 hover:text-green-600">Workout</a>
+                <a href="#" class="pb-2 px-1 text-gray-600 hover:text-green-600">Tracking</a>
+                <a href="#" class="pb-2 px-1 text-gray-600 hover:text-green-600">Foods</a>
+            </nav>
+        </div>
+
+        <!-- Weekly Stats -->
+        <div class="mb-8">
+            <h2 class="text-lg font-semibold mb-4">This Week</h2>
+            <div class="grid grid-cols-4 gap-4">
+                <div class="bg-white p-6 rounded-lg shadow-md text-center">
+                    <h3 class="text-gray-600">Daily Steps</h3>
+                    <p class="text-3xl font-bold">8,647</p>
+                    <p class="text-green-500">12% <span class="text-gray-500">vs yesterday</span></p>
+                </div>
+                <div class="bg-white p-6 rounded-lg shadow-md text-center">
+                    <h3 class="text-gray-600">Calories Burned</h3>
+                    <p class="text-3xl font-bold">486</p>
+                    <p class="text-green-500">8% <span class="text-gray-500">vs yesterday</span></p>
+                </div>
+                <div class="bg-white p-6 rounded-lg shadow-md text-center">
+                    <h3 class="text-gray-600">Active Minutes</h3>
+                    <p class="text-3xl font-bold">124</p>
+                    <p class="text-green-500">3% <span class="text-gray-500">vs yesterday</span></p>
+                </div>
+                <div class="bg-white p-6 rounded-lg shadow-md text-center">
+                    <h3 class="text-gray-600">Water Intake</h3>
+                    <p class="text-3xl font-bold">1.8L</p>
+                    <p class="text-green-500">75% of daily</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Activity Overview and Goal Progress -->
+        <div class="grid grid-cols-3 gap-8 mb-8">
+            <div class="col-span-2">
+                <h2 class="text-lg font-semibold mb-4">Activity Overview</h2>
+                <div class="bg-white p-6 rounded-lg shadow-md h-64 flex items-center justify-center">
+                    <p class="text-gray-500">[Activity Chart Here]</p>
+                </div>
+            </div>
+            <div>
+                <h2 class="text-lg font-semibold mb-4">Goal Progress</h2>
+                <div class="bg-white p-6 rounded-lg shadow-md">
+                    <div class="mb-4">
+                        <p class="text-gray-600">Weight Goal</p>
+                        <div class="w-full bg-gray-200 rounded-full h-2.5">
+                            <div class="bg-green-500 h-2.5 rounded-full" style="width: 75%"></div>
+                        </div>
+                        <p class="text-sm text-gray-500">75%</p>
+                    </div>
+                    <div class="mb-4">
+                        <p class="text-gray-600">Workout Goal</p>
+                        <div class="w-full bg-gray-200 rounded-full h-2.5">
+                            <div class="bg-green-500 h-2.5 rounded-full" style="width: 60%"></div>
+                        </div>
+                        <p class="text-sm text-gray-500">60%</p>
+                    </div>
+                    <div>
+                        <p class="text-gray-600">Nutrition Goal</p>
+                        <div class="w-full bg-gray-200 rounded-full h-2.5">
+                            <div class="bg-green-500 h-2.5 rounded-full" style="width: 85%"></div>
+                        </div>
+                        <p class="text-sm text-gray-500">85%</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Sidebar (Right) -->
+    <div class="w-64 bg-white shadow-md p-6">
+        <h2 class="text-lg font-semibold mb-4">Profile Settings</h2>
+        <a href="#" class="block text-gray-600 hover:text-green-500 mb-2">Edit Profile</a>
+        <a href="#" class="block text-gray-600 hover:text-green-500 mb-4">Account Settings</a>
+
+        <h2 class="text-lg font-semibold mb-4">Messages</h2>
+        <p class="text-gray-600 mb-4">[Messages]</p>
+
+        <h2 class="text-lg font-semibold mb-4">Notifications</h2>
+        <div class="mb-4">
+            <p class="text-gray-600">New Achievement!</p>
+            <p class="text-sm text-gray-500">You've reached your weekly goal • 2m ago</p>
+        </div>
+        <div class="mb-4">
+            <p class="text-gray-600">Workout Reminder</p>
+            <p class="text-sm text-gray-500">Time for daily exercise • 1h ago</p>
+        </div>
+
+        <h2 class="text-lg font-semibold mb-4">Session</h2>
+        <a href="#" class="text-red-500">Logout</a>
+    </div>
 
     <script>
-        function handleCredentialResponse(response) {
-            console.log("Google response:", response);
-            
-            // Display the token
-            document.getElementById('token-display').innerHTML = 
-                '<h3>Google Token:</h3><pre>' + response.credential + '</pre>';
+        // Handle sidebar navigation and sub-nav visibility
+        const subNav = document.getElementById('sub-nav');
+        const sidebarLinks = document.querySelectorAll('.sidebar-link');
 
-            // Send the token to your backend
-            fetch('http://localhost:8000/api/users/google-login/', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                },
-                body: JSON.stringify({
-                    token: response.credential
-                })
-            })
-            .then(response => response.json())
-            .then(data => {
-                console.log('Success:', data);
-                document.getElementById('response-display').innerHTML = 
-                    '<h3>Backend Response:</h3><pre>' + JSON.stringify(data, null, 2) + '</pre>';
-            })
-            .catch(error => {
-                console.error('Error:', error);
-                document.getElementById('response-display').innerHTML = 
-                    '<h3>Error:</h3><p>' + error.message + '</p>';
-            });
+        function updateSubNavVisibility() {
+            const activeLink = document.querySelector('.sidebar-link.bg-green-100');
+            if (activeLink && activeLink.getAttribute('data-page') === 'home') {
+                subNav.classList.remove('hidden');
+            } else {
+                subNav.classList.add('hidden');
+            }
         }
+
+        sidebarLinks.forEach(link => {
+            link.addEventListener('click', (e) => {
+                e.preventDefault();
+                // Remove active state from all links
+                sidebarLinks.forEach(l => {
+                    l.classList.remove('bg-green-100', 'text-green-600');
+                    l.classList.add('text-gray-600', 'hover:bg-gray-100');
+                });
+                // Add active state to clicked link
+                link.classList.remove('text-gray-600', 'hover:bg-gray-100');
+                link.classList.add('bg-green-100', 'text-green-600');
+                // Update sub-nav visibility
+                updateSubNavVisibility();
+            });
+        });
+
+        // Initial visibility check
+        updateSubNavVisibility();
+
+        // Logout confirmation
+        document.querySelectorAll('a[href="#"]').forEach(link => {
+            if (link.textContent.includes('Logout')) {
+                link.addEventListener('click', (e) => {
+                    e.preventDefault();
+                    alert('Are you sure you want to logout?');
+                });
+            }
+        });
     </script>
 </body>
-</html> 
+</html>
