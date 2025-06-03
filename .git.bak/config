@@ -1,0 +1,10 @@
+[core]
+	repositoryformatversion = 0
+	filemode = false
+	bare = false
+	logallrefupdates = true
+	symlinks = false
+	ignorecase = true
+[remote "wellzo"]
+	url = https://github.com/yugandhar0609/WellZO.git
+	fetch = +refs/heads/*:refs/remotes/wellzo/*
