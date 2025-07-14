@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { useAuth } from '../../hooks/useAuth';
-import UserProfileMenu from './UserProfileMenu';
+import ProfileSidebar from './ProfileSidebar';
 
 const DefaultProfileIcon = ({ className }) => (
   <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className={className}>
@@ -9,17 +9,18 @@ const DefaultProfileIcon = ({ className }) => (
 );
 
 const TopProfileButton = () => {
-  const [showMenu, setShowMenu] = useState(false);
+  const [showSidebar, setShowSidebar] = useState(false);
   const { currentUser } = useAuth();
   const defaultAvatar = 'https://via.placeholder.com/150/cccccc/808080?Text=User';
   const userAvatar = currentUser?.profile_picture_url || defaultAvatar;
 
   return (
     <>
-      <div className="fixed top-4 left-4 z-50 md:hidden">
+      {/* Profile Button - Available on all pages, top-left */}
+      <div className="fixed top-3 left-3 sm:top-4 sm:left-4 z-[80]">
         <button
-          onClick={() => setShowMenu(!showMenu)}
-          className="w-10 h-10 rounded-full bg-white shadow-lg flex items-center justify-center border-2 border-emerald-500 focus:outline-none focus:ring-2 focus:ring-emerald-500"
+          onClick={() => setShowSidebar(!showSidebar)}
+          className="w-9 h-9 sm:w-10 sm:h-10 md:w-12 md:h-12 rounded-full bg-white shadow-lg flex items-center justify-center border-2 border-emerald-500 hover:border-emerald-600 focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:ring-offset-2 transition-all duration-200"
         >
           {currentUser?.profile_picture_url ? (
             <img
@@ -28,23 +29,16 @@ const TopProfileButton = () => {
               className="w-full h-full rounded-full object-cover"
             />
           ) : (
-            <DefaultProfileIcon className="w-6 h-6 text-emerald-600" />
+            <DefaultProfileIcon className="w-4 h-4 sm:w-5 sm:h-5 md:w-6 md:h-6 text-emerald-600" />
           )}
         </button>
-
-        {/* Profile Menu Overlay */}
-        {showMenu && (
-          <>
-            <div 
-              className="fixed inset-0 bg-black bg-opacity-50 z-40"
-              onClick={() => setShowMenu(false)}
-            />
-            <div className="fixed top-16 left-4 z-50">
-              <UserProfileMenu isMobile={true} />
-            </div>
-          </>
-        )}
       </div>
+
+      {/* Profile Sidebar */}
+      <ProfileSidebar 
+        isOpen={showSidebar} 
+        onClose={() => setShowSidebar(false)} 
+      />
     </>
   );
 };

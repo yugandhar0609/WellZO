@@ -3,6 +3,7 @@ import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '../../hooks/useAuth';
 import { getUserProfile } from '../../interceptor/services';
 import BottomNavigationBar from '../../components/layout/BottomNavigationBar';
+import TopProfileButton from '../../components/layout/TopProfileButton';
 
 // 3D Animated AI Icon Component (Jarvis-style)
 const JarvisAIIcon = ({ size = 6, animate = true }) => {
@@ -106,7 +107,7 @@ const JarvisAIIcon = ({ size = 6, animate = true }) => {
 const Dashboard = () => {
   const navigate = useNavigate();
   const { currentUser, logout, isLoading: authLoading } = useAuth();
-  const [showProfileMenu, setShowProfileMenu] = useState(false);
+
   const [showSidebar, setShowSidebar] = useState(false);
   const [currentTime, setCurrentTime] = useState(new Date());
   const [waterIntake, setWaterIntake] = useState(6);
@@ -447,6 +448,9 @@ const Dashboard = () => {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-gray-50 via-white to-gray-100">
+      {/* Top Profile Button */}
+      <TopProfileButton />
+      
       {/* Profile Completion Banner */}
       {!isProfileComplete && (
         <div className="bg-gradient-to-r from-amber-400 via-orange-500 to-red-500 text-white px-4 py-3 shadow-lg">
@@ -594,90 +598,8 @@ const Dashboard = () => {
                 <div className="absolute -inset-1 bg-gradient-to-r from-purple-500 to-indigo-600 rounded-2xl blur opacity-30 group-hover:opacity-50 transition-opacity duration-300 animate-pulse"></div>
               </button>
               
-              {/* Desktop Profile Quick Access */}
-              <div className="hidden lg:flex items-center space-x-3">
-                <div className="relative">
-                  <button 
-                    onClick={() => setShowProfileMenu(!showProfileMenu)}
-                    className="flex items-center space-x-3 p-3 rounded-xl hover:bg-gray-50 transition-colors border border-gray-200"
-                  >
-                    <img
-                      src={userAvatar}
-                      alt="Profile"
-                      className="w-10 h-10 rounded-full border-2 border-emerald-500 object-cover"
-                    />
-                    <div className="text-left">
-                      <p className="text-sm font-semibold text-gray-900">{userName.split(' ')[0]}</p>
-                      <p className="text-xs text-emerald-600 font-medium">Premium</p>
-                    </div>
-                    <i className="fas fa-chevron-down text-gray-400 text-sm"></i>
-                  </button>
-                  
-                  {/* Desktop Profile Dropdown */}
-                  {showProfileMenu && (
-                    <div className="absolute right-0 top-full mt-2 w-72 bg-white/95 backdrop-blur-md rounded-2xl shadow-xl border border-gray-200 z-50">
-                      <div className="p-6 border-b border-gray-100">
-                        <div className="flex items-center space-x-4">
-                          <img
-                            src={userAvatar}
-                            alt="Profile"
-                            className="w-14 h-14 rounded-full border-2 border-emerald-500 object-cover shadow-lg"
-                          />
-                          <div>
-                            <h3 className="font-semibold text-gray-900">{userName}</h3>
-                            <p className="text-sm text-emerald-600 font-medium">Premium Member</p>
-                            <div className="flex items-center mt-1">
-                              <div className="flex text-yellow-400">
-                                {[...Array(5)].map((_, i) => (
-                                  <i key={i} className="fas fa-star text-xs"></i>
-                                ))}
-                              </div>
-                              <span className="text-xs text-gray-500 ml-2 font-medium">Level 12</span>
-                            </div>
-                          </div>
-                        </div>
-                      </div>
-                      <div className="p-3">
-                        <Link 
-                          to="/profile-dashboard" 
-                          className="flex items-center space-x-3 p-3 rounded-xl hover:bg-gray-50 text-gray-700 transition-colors"
-                          onClick={() => setShowProfileMenu(false)}
-                        >
-                          <span className="text-lg">👤</span>
-                          <span className="font-medium">View Profile</span>
-                        </Link>
-                        <Link 
-                          to="/user-details" 
-                          className="flex items-center space-x-3 p-3 rounded-xl hover:bg-gray-50 text-gray-700 transition-colors"
-                          onClick={() => setShowProfileMenu(false)}
-                        >
-                          <span className="text-lg">✏️</span>
-                          <span className="font-medium">Edit Profile</span>
-                        </Link>
-                        <button 
-                          onClick={handleLogout}
-                          className="w-full flex items-center space-x-3 p-3 rounded-xl hover:bg-red-50 text-red-600 transition-colors"
-                        >
-                          <span className="text-lg">🚪</span>
-                          <span className="font-medium">Logout</span>
-                        </button>
-                      </div>
-                    </div>
-                  )}
-                </div>
-              </div>
-              
-              <button 
-                onClick={() => setShowProfileMenu(!showProfileMenu)}
-                className="lg:hidden relative"
-              >
-                <img
-                  src={userAvatar}
-                  alt="Profile"
-                  className="w-11 h-11 rounded-full border-2 border-emerald-500 object-cover"
-                />
-                <div className="absolute -top-1 -right-1 w-4 h-4 bg-green-500 rounded-full border-2 border-white"></div>
-              </button>
+              {/* Right side spacing for balance */}
+              <div className="w-12 h-12"></div>
             </div>
           </div>
         </header>
@@ -1041,7 +963,7 @@ const Dashboard = () => {
                 </div>
                 
                 <div className="mt-6 pt-4 border-t border-gray-200">
-                  <p className="text-xs text-gray-500">Recent Scans</p>
+                  <p className="text-xs text-gray-500 mb-2">Recent Scans</p>
                   <div className="mt-2 space-y-2">
                     <div className="flex items-center justify-between text-sm">
                       <span>🍎 Apple</span>
@@ -1408,157 +1330,7 @@ const Dashboard = () => {
       {/* Mobile Bottom Navigation */}
       <BottomNavigationBar />
 
-      {/* Mobile Profile Menu */}
-      {showProfileMenu && (
-        <div className="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 lg:hidden">
-          <div className="absolute right-0 top-0 bottom-0 w-4/5 max-w-sm bg-white/95 backdrop-blur-md shadow-2xl overflow-y-auto border-l border-gray-200">
-            <div className="p-6 border-b border-gray-200">
-              <div className="flex items-center justify-between mb-4">
-                <div className="flex items-center space-x-3">
-                  <img
-                    src={userAvatar}
-                    alt="Profile"
-                    className="w-14 h-14 rounded-full border-2 border-emerald-500 object-cover shadow-lg"
-                  />
-                  <div>
-                    <h3 className="font-bold text-gray-900">{userName}</h3>
-                    <p className="text-sm text-emerald-600 font-medium">Premium Member</p>
-                    <div className="flex items-center mt-1">
-                      <div className="flex text-yellow-400">
-                        {[...Array(5)].map((_, i) => (
-                          <i key={i} className="fas fa-star text-xs"></i>
-                        ))}
-                      </div>
-                      <span className="text-xs text-gray-500 ml-2 font-medium">Level 12</span>
-                    </div>
-                  </div>
-                </div>
-                <button 
-                  onClick={() => setShowProfileMenu(false)}
-                  className="p-2 rounded-xl hover:bg-gray-100 transition-colors"
-                >
-                  <i className="fas fa-times text-gray-500"></i>
-                </button>
-              </div>
-            </div>
-            
-            <div className="p-6 space-y-6">
-              {/* Quick Stats */}
-              <div className="bg-gradient-to-r from-emerald-50 to-teal-50 rounded-xl p-4">
-                <h4 className="text-sm font-semibold text-gray-700 mb-3">Quick Stats</h4>
-                <div className="grid grid-cols-3 gap-3 text-center">
-                  <div>
-                    <p className="text-lg font-bold text-emerald-600">7</p>
-                    <p className="text-xs text-gray-600">Day Streak</p>
-                  </div>
-                  <div>
-                    <p className="text-lg font-bold text-purple-600">2,847</p>
-                    <p className="text-xs text-gray-600">Points</p>
-                  </div>
-                  <div>
-                    <p className="text-lg font-bold text-orange-600">#23</p>
-                    <p className="text-xs text-gray-600">Rank</p>
-                  </div>
-                </div>
-              </div>
 
-              {/* Profile Info */}
-              {profileData && (
-                <div>
-                  <h4 className="text-sm font-semibold text-gray-500 mb-3">PROFILE INFO</h4>
-                  <div className="space-y-3">
-                    {profileData?.age && (
-                      <div className="flex justify-between">
-                        <span className="text-sm text-gray-600">Age</span>
-                        <span className="font-semibold text-gray-900">{profileData.age} years</span>
-                      </div>
-                    )}
-                    {profileData?.city && (
-                      <div className="flex justify-between">
-                        <span className="text-sm text-gray-600">Location</span>
-                        <span className="font-semibold text-gray-900">{profileData.city}</span>
-                      </div>
-                    )}
-                    <div className="flex justify-between">
-                      <span className="text-sm text-gray-600">Member Since</span>
-                      <span className="font-semibold text-gray-900">Jan 2024</span>
-                    </div>
-                  </div>
-                </div>
-              )}
-
-              {/* Quick Actions */}
-              <div>
-                <h4 className="text-sm font-semibold text-gray-500 mb-3">QUICK ACTIONS</h4>
-                <div className="grid grid-cols-2 gap-3">
-                  <button className="bg-gradient-to-r from-emerald-500 to-teal-600 text-white p-3 rounded-xl text-sm font-medium shadow-lg">
-                    <span className="block text-lg mb-1">📊</span>
-                    View Progress
-                  </button>
-                  <button className="bg-gradient-to-r from-blue-500 to-purple-600 text-white p-3 rounded-xl text-sm font-medium shadow-lg">
-                    <span className="block text-lg mb-1">🎯</span>
-                    Set Goals
-                  </button>
-                  <button className="bg-gradient-to-r from-orange-500 to-red-500 text-white p-3 rounded-xl text-sm font-medium shadow-lg">
-                    <span className="block text-lg mb-1">💪</span>
-                    Start Workout
-                  </button>
-                  <button className="bg-gradient-to-r from-green-500 to-emerald-600 text-white p-3 rounded-xl text-sm font-medium shadow-lg">
-                    <span className="block text-lg mb-1">🥗</span>
-                    Log Meal
-                  </button>
-                </div>
-              </div>
-
-              {/* Account Menu */}
-              <div>
-                <h4 className="text-sm font-semibold text-gray-500 mb-3">ACCOUNT</h4>
-                <div className="space-y-2">
-                  <Link 
-                    to="/profile-dashboard" 
-                    className="w-full flex items-center space-x-3 p-3 rounded-xl hover:bg-gray-50 text-gray-700 transition-colors"
-                    onClick={() => setShowProfileMenu(false)}
-                  >
-                    <span className="text-lg">👤</span>
-                    <span className="font-medium">View Profile</span>
-                  </Link>
-                  <Link 
-                    to="/user-details" 
-                    className="w-full flex items-center space-x-3 p-3 rounded-xl hover:bg-gray-50 text-gray-700 transition-colors"
-                    onClick={() => setShowProfileMenu(false)}
-                  >
-                    <span className="text-lg">✏️</span>
-                    <span className="font-medium">Edit Profile</span>
-                  </Link>
-                  <Link 
-                    to="/settings" 
-                    className="w-full flex items-center space-x-3 p-3 rounded-xl hover:bg-gray-50 text-gray-700 transition-colors"
-                    onClick={() => setShowProfileMenu(false)}
-                  >
-                    <span className="text-lg">⚙️</span>
-                    <span className="font-medium">Settings</span>
-                  </Link>
-                  <Link 
-                    to="/help" 
-                    className="w-full flex items-center space-x-3 p-3 rounded-xl hover:bg-gray-50 text-gray-700 transition-colors"
-                    onClick={() => setShowProfileMenu(false)}
-                  >
-                    <span className="text-lg">❓</span>
-                    <span className="font-medium">Help & Support</span>
-                  </Link>
-                  <button 
-                    onClick={handleLogout}
-                    className="w-full flex items-center space-x-3 p-3 rounded-xl hover:bg-red-50 text-red-600 transition-colors"
-                  >
-                    <span className="text-lg">🚪</span>
-                    <span className="font-medium">Logout</span>
-                  </button>
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
-      )}
 
       {/* Food Scanner Modal */}
       {showFoodScan && (
