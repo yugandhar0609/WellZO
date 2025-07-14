@@ -8,6 +8,9 @@ from google.oauth2 import id_token
 from google.auth.transport import requests
 from django.conf import settings
 from django.core.mail import send_mail
+from django.utils import timezone
+from datetime import timedelta
+from .models import User, UserProfile, UserSession
 from .serializers import (
     UserRegistrationSerializer,
     VerifyOTPSerializer,
@@ -15,7 +18,6 @@ from .serializers import (
     GoogleAuthSerializer, UserSerializer,
     RequestPasswordResetOTPSerializer, ConfirmPasswordResetSerializer
 )
-from .models import User, UserProfile
 
 def send_otp_email(user_email, otp):
     subject = 'WellZO - Your Account Verification OTP'
@@ -160,12 +162,29 @@ class LoginView(APIView):
                 profile_data = get_or_create_profile(user)
                 user_data = UserSerializer(user).data
 
+                # Create or update session
+                device_info = {
+                    'user_agent': request.META.get('HTTP_USER_AGENT', ''),
+                    'ip': request.META.get('REMOTE_ADDR', '')
+                }
+                
+                # Create new session with 30 days expiry
+                session = UserSession.objects.create(
+                    user=user,
+                    expires_at=timezone.now() + timedelta(days=30),
+                    device_info=device_info
+                )
+
                 return Response({
                     'success': True,
                     'message': 'Login successful',
                     'user': user_data,
                     'tokens': tokens,
-                    'profile': profile_data
+                    'profile': profile_data,
+                    'session': {
+                        'token': str(session.session_token),
+                        'expires_at': session.expires_at.isoformat()
+                    }
                 }, status=status.HTTP_200_OK)
 
             return Response({
@@ -180,6 +199,50 @@ class LoginView(APIView):
                 'success': False,
                 'message': 'Login failed due to an unexpected error',
                 'error': str(e)
+            }, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+
+class ExtendSessionView(APIView):
+    permission_classes = [IsAuthenticated]
+
+    def post(self, request):
+        try:
+            session_token = request.data.get('session_token')
+            if not session_token:
+                return Response({
+                    'success': False,
+                    'message': 'Session token is required'
+                }, status=status.HTTP_400_BAD_REQUEST)
+
+            session = get_object_or_404(
+                UserSession,
+                session_token=session_token,
+                user=request.user,
+                is_active=True
+            )
+
+            if session.is_expired():
+                session.invalidate()
+                return Response({
+                    'success': False,
+                    'message': 'Session has expired. Please login again.'
+                }, status=status.HTTP_401_UNAUTHORIZED)
+
+            # Extend session by 30 days
+            session.extend_session()
+
+            return Response({
+                'success': True,
+                'message': 'Session extended successfully',
+                'session': {
+                    'token': str(session.session_token),
+                    'expires_at': session.expires_at.isoformat()
+                }
+            }, status=status.HTTP_200_OK)
+
+        except Exception as e:
+            return Response({
+                'success': False,
+                'message': str(e)
             }, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
 class UserProfileView(APIView):

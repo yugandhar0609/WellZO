@@ -202,5 +202,36 @@ class UserProfile(models.Model):
     def __str__(self):
         return f"{self.user.email}'s profile"
 
+class UserSession(models.Model):
+    user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='sessions')
+    session_token = models.UUIDField(default=uuid.uuid4, editable=False)
+    created_at = models.DateTimeField(auto_now_add=True)
+    expires_at = models.DateTimeField()
+    last_activity = models.DateTimeField(auto_now=True)
+    is_active = models.BooleanField(default=True)
+    device_info = models.JSONField(default=dict, blank=True)
+
+    def __str__(self):
+        return f"{self.user.email} - {self.session_token}"
+
+    def is_expired(self):
+        return timezone.now() > self.expires_at
+
+    def extend_session(self):
+        """Extend session by 30 days from last activity"""
+        self.expires_at = timezone.now() + timedelta(days=30)
+        self.save(update_fields=['expires_at', 'last_activity'])
+
+    def invalidate(self):
+        """Invalidate the session"""
+        self.is_active = False
+        self.save(update_fields=['is_active'])
+
+    class Meta:
+        indexes = [
+            models.Index(fields=['user', 'session_token']),
+            models.Index(fields=['expires_at']),
+        ]
+
 
 
