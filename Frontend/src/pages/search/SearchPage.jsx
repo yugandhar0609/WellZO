@@ -126,7 +126,7 @@ const SearchPage = () => {
 
   const handleSearch = async () => {
     if (!query.trim()) return;
-    
+
     setIsSearching(true);
     setHasSearched(true);
     setSearchResults([]);
@@ -206,7 +206,7 @@ const SearchPage = () => {
                   </button>
                 </div>
               </div>
-              <button 
+                  <button 
                 onClick={handleSearch}
                 disabled={!query.trim() || isSearching}
                 className="bg-gradient-to-r from-emerald-500 to-emerald-600 text-white px-4 sm:px-6 md:px-8 py-3 sm:py-4 hover:from-emerald-600 hover:to-emerald-700 transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center space-x-2 font-medium text-sm sm:text-base"
@@ -225,7 +225,7 @@ const SearchPage = () => {
                     <span>Search</span>
                   </>
                 )}
-              </button>
+                  </button>
             </div>
           </div>
         </div>
@@ -236,8 +236,8 @@ const SearchPage = () => {
             <h3 className="text-base sm:text-lg font-semibold text-gray-900 mb-3 sm:mb-4">Try asking:</h3>
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 sm:gap-3">
               {suggestedQueries.map((suggestion, index) => (
-                <button
-                  key={index}
+                  <button
+                    key={index}
                   onClick={() => setQuery(suggestion)}
                   className="text-left p-3 sm:p-4 bg-white rounded-lg sm:rounded-xl border border-gray-200 hover:border-emerald-300 hover:shadow-md transition-all duration-200 group"
                 >
@@ -248,9 +248,9 @@ const SearchPage = () => {
                       </svg>
                     </div>
                     <span className="text-sm sm:text-base text-gray-700 group-hover:text-gray-900 transition-colors leading-tight">{suggestion}</span>
-                  </div>
-                </button>
-              ))}
+              </div>
+                    </button>
+                  ))}
             </div>
           </div>
         )}
@@ -279,8 +279,8 @@ const SearchPage = () => {
             <div className="mb-4 sm:mb-6">
               <h2 className="text-xl sm:text-2xl font-bold text-gray-900 mb-2">Search Results</h2>
               <p className="text-sm sm:text-base text-gray-600">Found {searchResults.length} relevant results for "{query}"</p>
-            </div>
-            
+                  </div>
+                  
             <div className="space-y-4 sm:space-y-6">
               {searchResults.map((result) => (
                 <div key={result.id} className="bg-white rounded-xl sm:rounded-2xl shadow-lg border border-gray-200 overflow-hidden hover:shadow-xl transition-shadow duration-200">
@@ -336,9 +336,9 @@ const SearchPage = () => {
                         <button className="text-emerald-600 hover:text-emerald-700 font-medium text-sm sm:text-base">
                           Save for Later
                         </button>
-                      </div>
-                    </div>
-                  </div>
+                </div>
+              </div>
+            </div>
                 </div>
               ))}
             </div>
@@ -366,10 +366,10 @@ const SearchPage = () => {
               >
                 Try a new search
               </button>
-            </div>
           </div>
-        )}
-      </div>
+        </div>
+      )}
+    </div>
     </PageLayout>
   );
 };

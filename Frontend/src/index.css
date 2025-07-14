@@ -15,3 +15,56 @@ code {
   font-family: source-code-pro, Menlo, Monaco, Consolas, 'Courier New',
     monospace;
 }
+
+/* Hide scrollbar for Chrome, Safari and Opera */
+.scrollbar-hide::-webkit-scrollbar {
+  display: none;
+}
+
+/* Hide scrollbar for IE, Edge and Firefox */
+.scrollbar-hide {
+  -ms-overflow-style: none;  /* IE and Edge */
+  scrollbar-width: none;  /* Firefox */
+}
+
+/* Mobile optimizations */
+@media (max-width: 640px) {
+  .profile-tab-nav {
+    -webkit-overflow-scrolling: touch;
+  }
+  
+  /* Ensure touch targets are at least 44px */
+  .profile-tab-nav button {
+    min-height: 44px;
+  }
+  
+  /* Better spacing for mobile cards */
+  .mobile-card {
+    padding: 12px;
+    margin-bottom: 12px;
+  }
+  
+  /* Responsive text scaling */
+  .mobile-text-lg {
+    font-size: 1.125rem;
+  }
+  
+  .mobile-text-sm {
+    font-size: 0.875rem;
+  }
+}
+
+/* Extra small devices */
+@media (max-width: 480px) {
+  .profile-dashboard {
+    padding: 8px;
+  }
+  
+  .profile-header {
+    padding: 16px;
+  }
+  
+  .profile-tab-content {
+    padding: 16px;
+  }
+}

@@ -47,6 +47,7 @@ import PgSupportPage from '../pages/pg-owner/PgSupportPage';
 
 // Profile View Page
 import ProfileViews from '../components/profile/ProfileViews';
+import ProfileDashboard from '../pages/profile/ProfileDashboard';
 
 // Layout Components (if needed in the future for protected routes)
 // import DashboardLayout from '../components/layout/DashboardLayout';
@@ -97,7 +98,7 @@ const AppRoutes = () => {
         {/* <Route index element={<Navigate to="dashboard" replace />} /> */}
       </Route>
 
-      <Route path="/profile-dashboard" element={<ProfileViews />} />
+      <Route path="/profile-dashboard" element={<ProfileDashboard />} />
     </Routes>
   );
 };
