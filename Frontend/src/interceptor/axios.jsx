@@ -66,7 +66,8 @@ interceptors.interceptors.response.use(
           JSON.parse(localStorage.getItem('tokens')) : null;
 
         if (tokens?.refresh) {
-          const res = await axios.post('http://localhost:8000/api/token/refresh/', {
+          // Use the baseURL and relative path instead of hardcoded URL
+          const res = await interceptors.post('users/token/refresh/', {
             refresh: tokens.refresh
           });
 
