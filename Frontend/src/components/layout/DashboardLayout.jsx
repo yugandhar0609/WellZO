@@ -1,6 +1,8 @@
 import React, { useState } from 'react';
 import { Link, useLocation } from 'react-router-dom';
 import UserProfileMenu from './UserProfileMenu';
+import BottomNavigationBar from './BottomNavigationBar';
+import TopProfileButton from './TopProfileButton';
 
 const DashboardLayout = ({ children }) => {
   const location = useLocation();
@@ -19,10 +21,10 @@ const DashboardLayout = ({ children }) => {
 
   return (
     <div className="min-h-screen bg-gray-50">
-      {/* Sidebar Navigation */}
+      {/* Sidebar Navigation - Desktop Only */}
       <aside className="fixed left-0 top-0 h-screen w-64 bg-white shadow-lg hidden lg:block">
         <div className="p-6">
-          <h1 className="text-2xl font-bold text-emerald-600">HealthAI Coach</h1>
+          <h1 className="text-2xl font-bold text-emerald-600">WellZO</h1>
         </div>
         <nav className="mt-6">
           <div className="px-4 space-y-2">
@@ -44,7 +46,7 @@ const DashboardLayout = ({ children }) => {
       </aside>
 
       {/* Main Content */}
-      <main className="lg:ml-64 min-h-screen pb-16 lg:pb-0">
+      <main className="lg:ml-64 min-h-screen pb-20 lg:pb-0">
         {/* Top Navigation */}
         <header className="bg-white shadow-sm">
           <div className="flex justify-between items-center px-6 py-4">
@@ -66,20 +68,9 @@ const DashboardLayout = ({ children }) => {
         {children}
       </main>
 
-      {/* Mobile Navigation */}
-      <nav className="fixed bottom-0 left-0 right-0 bg-white shadow-lg lg:hidden z-50">
-        <div className="flex justify-around p-4">
-          {navigationItems.slice(0, 5).map(item => (
-            <Link
-              key={item.path}
-              to={item.path}
-              className={isActivePath(item.path) ? 'text-emerald-600' : 'text-gray-600'}
-            >
-              <i className={`fas fa-${item.icon} text-xl`}></i>
-            </Link>
-          ))}
-        </div>
-      </nav>
+      {/* Mobile Navigation Components */}
+      <TopProfileButton />
+      <BottomNavigationBar />
 
       {/* Mobile Menu Overlay */}
       {isMobileMenuOpen && (
@@ -87,7 +78,7 @@ const DashboardLayout = ({ children }) => {
           <div className="absolute left-0 top-0 bottom-0 w-64 bg-white shadow-lg">
             <div className="p-6">
               <div className="flex justify-between items-center">
-                <h1 className="text-2xl font-bold text-emerald-600">HealthAI Coach</h1>
+                <h1 className="text-2xl font-bold text-emerald-600">WellZO</h1>
                 <button 
                   onClick={() => setIsMobileMenuOpen(false)}
                   className="text-gray-500"
@@ -116,8 +107,6 @@ const DashboardLayout = ({ children }) => {
           </div>
         </div>
       )}
-
-      <UserProfileMenu isMobile={true} />
     </div>
   );
 };

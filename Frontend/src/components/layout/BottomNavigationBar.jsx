@@ -1,6 +1,6 @@
 import React from 'react';
 import { NavLink, useLocation } from 'react-router-dom';
-import { useAuth } from '../../hooks/useAuth'; // To get user avatar for profile icon
+import { useAuth } from '../../hooks/useAuth';
 
 // SVG Icons as JSX
 const HomeIcon = ({ className }) => (
@@ -12,6 +12,12 @@ const HomeIcon = ({ className }) => (
 const SearchIcon = ({ className }) => (
   <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className={className}>
     <path strokeLinecap="round" strokeLinejoin="round" d="m21 21-5.197-5.197m0 0A7.5 7.5 0 1 0 5.196 5.196a7.5 7.5 0 0 0 10.607 10.607Z" />
+  </svg>
+);
+
+const AIChatIcon = ({ className }) => (
+  <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className={className}>
+    <path strokeLinecap="round" strokeLinejoin="round" d="M12 20.25c4.97 0 9-3.694 9-8.25s-4.03-8.25-9-8.25S3 7.444 3 12c0 2.104.859 4.023 2.273 5.48.432.447.74 1.04.586 1.641a4.483 4.483 0 0 1-.923 1.785A5.969 5.969 0 0 0 6 21c1.282 0 2.47-.402 3.445-1.087.81.22 1.668.337 2.555.337Z" />
   </svg>
 );
 
@@ -33,28 +39,30 @@ const DefaultProfileIcon = ({ className }) => (
   </svg>
 );
 
+const WorkoutIcon = ({ className }) => (
+  <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className={className}>
+    <path strokeLinecap="round" strokeLinejoin="round" d="M15.362 5.214A8.252 8.252 0 0 1 12 21 8.25 8.25 0 0 1 6.038 7.047 8.287 8.287 0 0 0 9 9.601a8.983 8.983 0 0 1 3.361-6.867 8.21 8.21 0 0 0 3 2.48Z" />
+  </svg>
+);
+
 const BottomNavigationBar = () => {
   const { currentUser } = useAuth();
   const location = useLocation();
 
-  // Define navigation items
+  // Define navigation items in the requested sequence
   const navItems = [
     { id: 'home', label: 'Home', IconComponent: HomeIcon, path: '/dashboard' },
     { id: 'search', label: 'Search', IconComponent: SearchIcon, path: '/search' },
+    { id: 'ai-chat', label: 'AI Chat', IconComponent: AIChatIcon, path: '/ai-chat' },
     { id: 'community', label: 'Community', IconComponent: CommunityIcon, path: '/community' },
     { id: 'marketplace', label: 'Marketplace', IconComponent: MarketplaceIcon, path: '/marketplace' },
-    { id: 'profile', label: 'Profile', path: '/profile-dashboard', isProfile: true },
   ];
 
-  // Check if the current path is part of the profile section to keep profile tab active
-  const isProfileActive = location.pathname.startsWith('/profile-dashboard') || location.pathname.startsWith('/user-details');
-
   return (
-    <nav className="fixed bottom-0 left-0 right-0 bg-white border-t border-gray-200 shadow-md z-50 md:hidden">
+    <nav className="fixed bottom-0 left-0 right-0 bg-white border-t border-gray-200 shadow-md z-40 md:hidden">
       <div className="flex justify-around items-center h-16">
         {navItems.map((item) => {
-          // Determine if the current item is active
-          const isActive = item.isProfile ? isProfileActive : location.pathname === item.path;
+          const isActive = location.pathname === item.path;
           
           return (
             <NavLink
@@ -71,23 +79,8 @@ const BottomNavigationBar = () => {
               title={item.label}
             >
               <div className="flex flex-col items-center justify-center">
-                {item.isProfile ? (
-                  currentUser?.profile_picture_url ? (
-                    <img 
-                      src={currentUser.profile_picture_url} 
-                      alt={item.label}
-                      className={`w-6 h-6 rounded-full object-cover 
-                        ${isActive 
-                          ? 'border-2 border-emerald-600' 
-                          : 'border-2 border-transparent group-hover:border-emerald-300'}`}
-                    />
-                  ) : (
-                    <DefaultProfileIcon className="w-6 h-6" />
-                  )
-                ) : (
-                  <item.IconComponent className="w-6 h-6" />
-                )}
-                <span className="text-xs mt-1 hidden">
+                <item.IconComponent className="w-6 h-6" />
+                <span className="text-[10px] mt-1">
                   {item.label}
                 </span>
               </div>

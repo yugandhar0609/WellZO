@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '../../hooks/useAuth';
 import { getUserProfile } from '../../interceptor/services';
+import BottomNavigationBar from '../../components/layout/BottomNavigationBar';
 
 // 3D Animated AI Icon Component (Jarvis-style)
 const JarvisAIIcon = ({ size = 6, animate = true }) => {
@@ -1405,32 +1406,7 @@ const Dashboard = () => {
       </main>
 
       {/* Mobile Bottom Navigation */}
-      <nav className="fixed bottom-0 left-0 right-0 bg-white/95 backdrop-blur-md shadow-xl lg:hidden z-50 border-t border-gray-200">
-        <div className="grid grid-cols-5 gap-1 px-2 py-3">
-          <Link to="/dashboard" className="flex flex-col items-center justify-center text-emerald-600 bg-emerald-50 rounded-xl py-2">
-            <span className="text-lg mb-1">🏠</span>
-            <span className="text-xs font-semibold">Home</span>
-          </Link>
-          <Link to="/community" className="flex flex-col items-center justify-center text-gray-600 hover:text-emerald-600 transition-colors py-2 rounded-xl hover:bg-gray-50">
-            <span className="text-lg mb-1">👥</span>
-            <span className="text-xs">Community</span>
-          </Link>
-          <Link to="/nutrition-ai" className="flex flex-col items-center justify-center text-gray-600 hover:text-emerald-600 transition-colors py-2 rounded-xl hover:bg-gray-50">
-            <div className="w-8 h-8 bg-gradient-to-r from-emerald-500 to-teal-600 rounded-xl flex items-center justify-center mb-1 shadow-md">
-              <span className="text-white text-sm">🤖</span>
-            </div>
-            <span className="text-xs">AI</span>
-          </Link>
-          <Link to="/workouts" className="flex flex-col items-center justify-center text-gray-600 hover:text-emerald-600 transition-colors py-2 rounded-xl hover:bg-gray-50">
-            <span className="text-lg mb-1">💪</span>
-            <span className="text-xs">Workout</span>
-          </Link>
-          <Link to="/marketplace" className="flex flex-col items-center justify-center text-gray-600 hover:text-emerald-600 transition-colors py-2 rounded-xl hover:bg-gray-50">
-            <span className="text-lg mb-1">🛒</span>
-            <span className="text-xs">Store</span>
-          </Link>
-        </div>
-      </nav>
+      <BottomNavigationBar />
 
       {/* Mobile Profile Menu */}
       {showProfileMenu && (

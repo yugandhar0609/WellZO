@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { Link } from 'react-router-dom';
+import PageLayout from '../../components/layout/PageLayout';
 
 // Enhanced Mock Data for different categories including people
 const mockData = {
@@ -718,188 +719,43 @@ const SearchPage = () => {
   );
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-gray-50 via-white to-purple-50">
-      {/* Header */}
-      <header className="bg-white/90 backdrop-blur-xl shadow-lg border-b border-gray-200/50 sticky top-0 z-50">
-        <div className="max-w-6xl mx-auto px-4 lg:px-8 py-4">
-          <div className="flex items-center justify-between">
-            <Link to="/dashboard" className="flex items-center space-x-3">
-              <div className="w-10 h-10 bg-gradient-to-r from-purple-500 to-indigo-600 rounded-xl flex items-center justify-center">
-                <i className="fas fa-search text-white"></i>
-              </div>
-              <div>
-                <h1 className="text-xl font-bold bg-gradient-to-r from-purple-600 to-indigo-600 bg-clip-text text-transparent">
-                  WellZO Discovery
-                </h1>
-                <p className="text-xs text-gray-600">Find people, places & services</p>
-              </div>
-            </Link>
-            <Link 
-              to="/dashboard"
-              className="flex items-center space-x-2 bg-gradient-to-r from-emerald-500 to-teal-600 text-white px-3 py-2 rounded-xl text-sm font-medium hover:shadow-lg transition-all duration-300"
-            >
-              <i className="fas fa-arrow-left"></i>
-              <span className="hidden sm:inline">Dashboard</span>
-            </Link>
-          </div>
-        </div>
-      </header>
-
-      <div className="max-w-6xl mx-auto px-4 lg:px-8">
-        {/* Search Section */}
-        {!searchResponse && (
-          <div className="py-16 text-center">
-            <div className="max-w-2xl mx-auto">
-              <h2 className="text-4xl font-bold text-gray-900 mb-4">
-                What are you looking for?
-              </h2>
-              <p className="text-lg text-gray-600 mb-8">
-                Discover people, places, and services in the WellZO community. Find fitness partners, coaches, gyms, and more.
-              </p>
-            </div>
-          </div>
-        )}
-
+    <PageLayout title="Search">
+      <div className="space-y-6">
         {/* Search Input */}
-        <div className="relative mb-8 max-w-4xl mx-auto">
-          <div className="relative">
-            <input
-              ref={searchInputRef}
-              type="text"
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-              onFocus={() => setShowSuggestions(true)}
-              onKeyPress={(e) => e.key === 'Enter' && handleSearch()}
-              placeholder="Try: 'fitness coaches in Anna Nagar' or 'yoga instructors near me'"
-              className="w-full bg-white/90 backdrop-blur-xl border-2 border-gray-200 rounded-2xl px-6 py-4 text-base focus:outline-none focus:ring-4 focus:ring-purple-500/20 focus:border-purple-500 transition-all duration-300 shadow-lg"
-            />
-            <button
-              onClick={() => handleSearch()}
-              disabled={isSearching}
-              className="absolute right-2 top-1/2 transform -translate-y-1/2 bg-gradient-to-r from-purple-500 to-indigo-600 text-white p-3 rounded-xl hover:shadow-lg transition-all duration-300 disabled:opacity-50"
-            >
-              {isSearching ? (
-                <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
-              ) : (
-                <i className="fas fa-search"></i>
-              )}
-            </button>
-          </div>
-
-          {/* Search Suggestions */}
-          {showSuggestions && !isSearching && !searchResponse && (
-            <div className="absolute top-full left-0 right-0 mt-2 bg-white/95 backdrop-blur-xl rounded-2xl shadow-2xl border border-gray-200/50 p-4 z-40">
-              <div className="space-y-2">
-                <h4 className="text-sm font-semibold text-gray-500 mb-3">Try searching for:</h4>
-                {suggestions.map((suggestion, index) => (
-                  <button
-                    key={index}
-                    onClick={() => {
-                      setSearchQuery(suggestion);
-                      setShowSuggestions(false);
-                      handleSearch(suggestion);
-                    }}
-                    className="w-full text-left p-3 rounded-xl hover:bg-purple-50 transition-colors group"
-                  >
-                    <div className="flex items-center space-x-3">
-                      <i className="fas fa-search text-purple-400 group-hover:text-purple-600"></i>
-                      <span className="text-gray-700 group-hover:text-gray-900 text-sm">{suggestion}</span>
-                    </div>
-                  </button>
-                ))}
-              </div>
-
-              {searchHistory.length > 0 && (
-                <div className="border-t border-gray-200 mt-4 pt-4">
-                  <h4 className="text-sm font-semibold text-gray-500 mb-3">Recent searches:</h4>
-                  {searchHistory.map((query, index) => (
-                    <button
-                      key={index}
-                      onClick={() => {
-                        setSearchQuery(query);
-                        setShowSuggestions(false);
-                        handleSearch(query);
-                      }}
-                      className="w-full text-left p-2 rounded-lg hover:bg-gray-50 transition-colors text-sm text-gray-600 flex items-center space-x-2"
-                    >
-                      <i className="fas fa-history text-gray-400"></i>
-                      <span>{query}</span>
-                    </button>
-                  ))}
-                </div>
-              )}
-            </div>
-          )}
+        <div className="relative">
+          <input
+            type="text"
+            placeholder="Search for PGs, gyms, doctors, nutrition..."
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+            className="w-full px-4 py-3 rounded-lg border border-gray-300 focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500"
+          />
+          <button
+            onClick={() => handleSearch()}
+            className="absolute right-2 top-1/2 -translate-y-1/2 bg-emerald-500 text-white px-4 py-1.5 rounded-md hover:bg-emerald-600 transition-colors"
+          >
+            Search
+          </button>
         </div>
 
-        {/* Search Tabs */}
-        {searchResponse && (
-          <div className="mb-8">
-            <div className="flex items-center space-x-1 bg-white/90 backdrop-blur-xl rounded-2xl p-1 border border-gray-200/50 shadow-lg max-w-lg">
-              {searchTabs.map((tab) => {
-                const filteredResults = getFilteredResults(searchResponse.results);
-                const count = tab.id === 'all' ? searchResponse.results.length : 
-                             tab.id === 'people' ? searchResponse.results.filter(r => r.category === 'people').length :
-                             tab.id === 'places' ? searchResponse.results.filter(r => ['accommodation', 'fitness'].includes(r.category)).length :
-                             searchResponse.results.filter(r => ['healthcare', 'nutrition'].includes(r.category)).length;
-                
-                return (
-                  <button
-                    key={tab.id}
-                    onClick={() => setActiveTab(tab.id)}
-                    className={`flex items-center space-x-2 px-4 py-2 rounded-xl transition-all duration-300 text-sm font-medium ${
-                      activeTab === tab.id
-                        ? 'bg-gradient-to-r from-purple-500 to-indigo-600 text-white shadow-lg'
-                        : 'text-gray-600 hover:bg-purple-50 hover:text-purple-600'
-                    }`}
-                  >
-                    <i className={`${tab.icon} text-xs`}></i>
-                    <span>{tab.label}</span>
-                    {count > 0 && (
-                      <span className={`px-2 py-0.5 rounded-full text-xs font-bold ${
-                        activeTab === tab.id ? 'bg-white/20' : 'bg-purple-100 text-purple-600'
-                      }`}>
-                        {count}
-                      </span>
-                    )}
-                  </button>
-                );
-              })}
-            </div>
-          </div>
-        )}
+        {/* Filter Tabs */}
+        <div className="flex space-x-2 overflow-x-auto pb-2 scrollbar-hide">
+          {searchTabs.map(tab => (
+            <button
+              key={tab.id}
+              onClick={() => setActiveTab(tab.id)}
+              className={`px-4 py-2 rounded-full whitespace-nowrap ${
+                activeTab === tab.id
+                  ? 'bg-emerald-500 text-white'
+                  : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+              }`}
+            >
+              {tab.label}
+            </button>
+          ))}
+        </div>
 
-        {/* AI Response Section */}
-        {isSearching && (
-          <div className="max-w-4xl mx-auto mb-8">
-            <div className="bg-white/80 backdrop-blur-xl rounded-2xl shadow-lg p-6 border border-gray-200/50">
-              <div className="flex items-start space-x-4">
-                <div className="w-10 h-10 bg-gradient-to-r from-purple-500 to-indigo-600 rounded-xl flex items-center justify-center flex-shrink-0">
-                  <div className="w-3 h-3 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
-                </div>
-                <div className="flex-1">
-                  <h3 className="font-semibold text-gray-900 mb-2">WellZO AI is analyzing...</h3>
-                  <div className="space-y-2 text-sm text-gray-600">
-                    <div className="flex items-center space-x-2">
-                      <div className="w-2 h-2 bg-purple-400 rounded-full animate-pulse"></div>
-                      <span>Searching through community...</span>
-                    </div>
-                    <div className="flex items-center space-x-2">
-                      <div className="w-2 h-2 bg-purple-400 rounded-full animate-pulse" style={{ animationDelay: '0.5s' }}></div>
-                      <span>Analyzing matching criteria...</span>
-                    </div>
-                    <div className="flex items-center space-x-2">
-                      <div className="w-2 h-2 bg-purple-400 rounded-full animate-pulse" style={{ animationDelay: '1s' }}></div>
-                      <span>Generating recommendations...</span>
-                    </div>
-                  </div>
-                </div>
-              </div>
-            </div>
-          </div>
-        )}
-
-        {/* Search Response */}
+        {/* Search Results */}
         {searchResponse && (
           <div className="max-w-6xl mx-auto space-y-6 pb-8">
             {/* AI Response */}
@@ -1015,14 +871,6 @@ const SearchPage = () => {
               </div>
             </div>
           </div>
-        )}
-
-        {/* Click outside to close suggestions */}
-        {showSuggestions && (
-          <div 
-            className="fixed inset-0 z-30" 
-            onClick={() => setShowSuggestions(false)}
-          ></div>
         )}
       </div>
 
@@ -1142,7 +990,7 @@ const SearchPage = () => {
           </div>
         </div>
       )}
-    </div>
+    </PageLayout>
   );
 };
 
