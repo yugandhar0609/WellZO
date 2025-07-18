@@ -83,6 +83,39 @@ def get_or_create_profile(user):
 class UserRegistrationView(APIView):
     def post(self, request):
         try:
+            email = request.data.get('email')
+            
+            # Check if user already exists
+            try:
+                existing_user = User.objects.get(email=email)
+                if existing_user.is_verified:
+                    return Response({
+                        'success': False,
+                        'message': 'User with this email already exists and is verified. Please login instead.',
+                        'errors': {
+                            'email': ['User with this email already exists and is verified.']
+                        }
+                    }, status=status.HTTP_400_BAD_REQUEST)
+                else:
+                    # User exists but not verified, regenerate OTP and send email
+                    existing_user.generate_otp()
+                    if send_otp_email(existing_user.email, existing_user.otp):
+                        return Response({
+                            'success': True,
+                            'message': 'OTP resent successfully. Please check your email for verification.',
+                            'email': existing_user.email,
+                            'resend': True
+                        }, status=status.HTTP_200_OK)
+                    else:
+                        return Response({
+                            'success': False,
+                            'message': 'Failed to send OTP email. Please try again.',
+                            'email': existing_user.email
+                        }, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+            except User.DoesNotExist:
+                # User doesn't exist, proceed with registration
+                pass
+            
             serializer = UserRegistrationSerializer(data=request.data)
             if serializer.is_valid():
                 user = serializer.save()
