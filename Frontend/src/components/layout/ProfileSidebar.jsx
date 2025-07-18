@@ -118,7 +118,9 @@ const ProfileSidebar = ({ isOpen, onClose }) => {
       >
         {/* Header */}
         <div className="flex items-center justify-between p-3 sm:p-4 border-b border-gray-200 bg-gradient-to-r from-emerald-50 to-emerald-100">
-          <h2 className="text-base sm:text-lg font-semibold text-emerald-800">My Profile</h2>
+          <div className="flex items-center">
+            <h2 className="text-base sm:text-lg font-semibold text-emerald-800">Profile</h2>
+          </div>
           <button
             onClick={onClose}
             className="p-1.5 sm:p-2 rounded-full hover:bg-emerald-200 transition-colors"
